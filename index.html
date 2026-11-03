@@ -2,71 +2,90 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b0b0b">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pulse Sound Store</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0b0b0b;color:#fff;font-family:Arial,sans-serif}
-header{padding:22px 18px;border-bottom:1px solid #292929}
-.logo{font-size:25px;font-weight:900;letter-spacing:1px}
+*{box-sizing:border-box}
+body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif}
+header{padding:22px 18px;border-bottom:1px solid #292929;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:21px;font-weight:900;letter-spacing:2px}
 .logo span{color:#ed2929}
-.sub{color:#888;font-size:10px;letter-spacing:3px;margin-top:6px}
-.hero{padding:45px 20px}
-.tag{color:#ed2929;font-size:12px;letter-spacing:3px}
-h1{font-size:38px;line-height:1.12;margin:20px 0}
-h1 span{color:#ed2929}
-.hero p{color:#999;line-height:1.6;font-size:14px}
-.btn{display:inline-block;background:#e52929;color:white;padding:15px 23px;border-radius:5px;text-decoration:none;font-weight:bold;margin-top:25px}
-section{padding:20px}
-h2{font-size:23px;margin-bottom:18px}
+.cart{background:#ed2929;color:white;border:0;padding:11px 15px;border-radius:8px;font-weight:bold}
+.hero{padding:55px 20px 45px;text-align:center;background:linear-gradient(145deg,#191919,#080808)}
+.hero small{color:#ed2929;letter-spacing:3px}
+.hero h1{font-size:34px;margin:15px 0}
+.hero p{color:#aaa;font-size:14px}
+.section{padding:25px 16px}
+.section h2{font-size:22px}
+.categories{display:flex;gap:9px;overflow:auto;padding-bottom:10px}
+.categories button{white-space:nowrap;background:#191919;color:#fff;border:1px solid #333;padding:11px 15px;border-radius:20px}
+.categories button.active{background:#ed2929;border-color:#ed2929}
 .products{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.product{background:#171717;border:1px solid #292929;border-radius:9px;padding:12px}
-.pic{height:115px;background:#242424;border-radius:6px;display:grid;place-items:center;font-size:42px}
-.product h3{font-size:15px;margin-top:13px}
-.product p{font-size:12px;color:#888;margin-top:7px}
-footer{padding:30px;text-align:center;color:#777;font-size:12px;border-top:1px solid #292929;margin-top:30px}
+.product{background:#171717;border:1px solid #292929;border-radius:12px;overflow:hidden}
+.photo{height:125px;background:#222;display:flex;align-items:center;justify-content:center;font-size:48px}
+.info{padding:12px}
+.info h3{font-size:15px;margin:0 0 8px}
+.info p{font-size:12px;color:#999;min-height:30px}
+.price{font-weight:bold;color:#ed2929;margin:12px 0}
+.add{width:100%;padding:11px;background:#ed2929;color:white;border:0;border-radius:7px;font-weight:bold}
+footer{text-align:center;padding:30px;color:#777;font-size:12px}
 </style>
 </head>
 <body>
 <header>
 <div class="logo">PULSE <span>SOUND</span></div>
-<div class="sub">CAR AUDIO PREMIUM STORE</div>
+<button class="cart" onclick="showCart()">🛒 Корзина <b id="count">0</b></button>
 </header>
-
-<div class="hero">
-<div class="tag">POWER YOUR SOUND</div>
-<h1>МОЩНОСТЬ<br>НАЧИНАЕТСЯ <span>ЗДЕСЬ.</span></h1>
-<p>Автозвук без компромиссов. Сабвуферы, усилители и оборудование для настоящего баса.</p>
-<a href="#catalog" class="btn">ОТКРЫТЬ КАТАЛОГ</a>
-</div>
-
-<section id="catalog">
-<h2>Каталог</h2>
-<div class="products">
-<div class="product">
-<div class="pic">🔊</div>
-<h3>Сабвуферы</h3>
-<p>Мощный и глубокий бас</p>
-</div>
-<div class="product">
-<div class="pic">⚡</div>
-<h3>Усилители</h3>
-<p>Мощность и контроль</p>
-</div>
-<div class="product">
-<div class="pic">🎵</div>
-<h3>Динамики</h3>
-<p>Чистое звучание</p>
-</div>
-<div class="product">
-<div class="pic">🔧</div>
-<h3>Аксессуары</h3>
-<p>Всё для автозвука</p>
-</div>
-</div>
+<section class="hero">
+<small>PREMIUM CAR AUDIO</small>
+<h1>МОЩНОСТЬ<br>НАЧИНАЕТСЯ ЗДЕСЬ.</h1>
+<p>Магазин автозвука Pulse Sound Store</p>
 </section>
-
-<footer>© PULSE SOUND STORE</footer>
+<section class="section">
+<h2>Каталог товаров</h2>
+<div class="categories">
+<button class="active" onclick="filter('all',this)">Все товары</button>
+<button onclick="filter('sub',this)">Сабвуферы</button>
+<button onclick="filter('amp',this)">Усилители</button>
+<button onclick="filter('speaker',this)">Динамики</button>
+<button onclick="filter('accessory',this)">Аксессуары</button>
+</div>
+<div class="products" id="products"></div>
+</section>
+<footer>PULSE SOUND STORE © 2026</footer>
+<script>
+const items=[
+{id:1,name:"Сабвуфер 12 дюймов",cat:"sub",desc:"Мощный бас для автомобиля",price:15000,emoji:"🔊"},
+{id:2,name:"Сабвуфер 15 дюймов",cat:"sub",desc:"Для любителей громкого звука",price:22000,emoji:"🔊"},
+{id:3,name:"Моноблок 3000W",cat:"amp",desc:"Усилитель для сабвуфера",price:18000,emoji:"⚡"},
+{id:4,name:"Усилитель 4 канала",cat:"amp",desc:"Для акустики автомобиля",price:12000,emoji:"🔌"},
+{id:5,name:"Динамики 16.5 см",cat:"speaker",desc:"Чистое и мощное звучание",price:6500,emoji:"🎵"},
+{id:6,name:"Провода для подключения",cat:"accessory",desc:"Комплект для автозвука",price:2500,emoji:"🔧"}
+];
+let cart=[];
+function render(list=items){
+document.getElementById("products").innerHTML=list.map(p=>`
+<div class="product">
+<div class="photo">${p.emoji}</div>
+<div class="info"><h3>${p.name}</h3><p>${p.desc}</p>
+<div class="price">${p.price.toLocaleString("ru-RU")} ₽</div>
+<button class="add" onclick="add(${p.id})">В корзину</button></div></div>`).join("");
+}
+function filter(cat,btn){
+document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+render(cat==="all"?items:items.filter(p=>p.cat===cat));
+}
+function add(id){
+cart.push(items.find(p=>p.id===id));
+document.getElementById("count").textContent=cart.length;
+}
+function showCart(){
+if(!cart.length){alert("Корзина пока пуста");return;}
+let total=cart.reduce((s,p)=>s+p.price,0);
+alert("Товаров: "+cart.length+"\nСумма: "+total.toLocaleString("ru-RU")+" ₽\n\nСледующий этап — оформление заказа.");
+}
+render();
+</script>
 </body>
 </html>
