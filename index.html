@@ -3,303 +3,89 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#090909">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pulse Sound Store</title>
 
 <style>
-:root {
-  --red: #ed2028;
-  --bg: #090909;
-  --card: #151515;
-  --muted: #999;
-  --line: #292929;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: #fff;
-  font-family: Arial, sans-serif;
-}
-button, input, select, textarea { font: inherit; }
-button { cursor: pointer; }
-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(9,9,9,.96);
-  border-bottom: 1px solid var(--line);
-  padding: 15px;
-}
-.header-inner {
-  max-width: 1100px;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.logo {
-  font-size: 21px;
-  font-weight: 900;
-  letter-spacing: 1px;
-}
-.logo span { color: var(--red); }
-.cart-button, .primary-button {
-  border: 0;
-  background: var(--red);
-  color: white;
-  border-radius: 9px;
-  padding: 12px 16px;
-  font-weight: bold;
-}
-main {
-  max-width: 1100px;
-  margin: auto;
-  padding: 18px 14px 50px;
-}
-.hero {
-  padding: 35px 22px;
-  border: 1px solid #292929;
-  border-radius: 15px;
-  background: linear-gradient(130deg,#241010,#101010 65%);
-  margin-bottom: 25px;
-}
-.hero h1 {
-  font-size: clamp(27px,6vw,44px);
-  margin: 0 0 10px;
-}
-.hero h1 span { color: var(--red); }
-.hero p { color: #bbb; margin: 0; line-height: 1.5; }
-.section-title {
-  font-size: 23px;
-  margin: 25px 0 15px;
-}
-.categories {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 12px;
-}
-.category {
-  flex: 0 0 auto;
-  background: #1b1b1b;
-  color: #ddd;
-  border: 1px solid #333;
-  border-radius: 30px;
-  padding: 10px 15px;
-}
-.category.active {
-  background: var(--red);
-  border-color: var(--red);
-  color: white;
-}
-.products {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 12px;
-}
-.product-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  overflow: hidden;
-  min-width: 0;
-}
-.product-image {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  background: #202020;
-}
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.image-nav {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px;
-  pointer-events: none;
-}
-.image-nav button {
-  pointer-events: auto;
-  border: 0;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  background: rgba(0,0,0,.7);
-  color: white;
-}
-.product-info { padding: 12px; }
-.product-info h3 {
-  font-size: 15px;
-  margin: 0 0 8px;
-  line-height: 1.35;
-}
-.product-description {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
-  min-height: 32px;
-}
-.price {
-  color: var(--red);
-  font-size: 19px;
-  font-weight: 900;
-  margin: 12px 0;
-}
-.stock { color: #aaa; font-size: 12px; margin-bottom: 10px; }
-.card-actions { display: grid; gap: 7px; }
-.card-actions button {
-  width: 100%;
-  border-radius: 8px;
-  padding: 10px;
-  font-weight: bold;
-}
-.details-button {
-  color: white;
-  background: #292929;
-  border: 1px solid #444;
-}
-.add-button {
-  background: var(--red);
-  color: white;
-  border: 0;
-}
-.empty, .loading, .error {
-  color: #aaa;
-  text-align: center;
-  padding: 35px 10px;
-  grid-column: 1/-1;
-}
-.error { color: #ff7777; }
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  background: rgba(0,0,0,.88);
-  overflow-y: auto;
-  padding: 18px 12px;
-}
-.modal.open { display: block; }
-.modal-content {
-  max-width: 600px;
-  margin: 20px auto;
-  background: #151515;
-  border: 1px solid #333;
-  border-radius: 14px;
-  padding: 17px;
-  position: relative;
-}
-.close {
-  position: absolute;
-  right: 12px;
-  top: 10px;
-  border: 0;
-  background: #303030;
-  color: white;
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  font-size: 20px;
-}
-.detail-image {
-  width: 100%;
-  max-height: 380px;
-  object-fit: contain;
-  background: #080808;
-  border-radius: 10px;
-  margin-top: 25px;
-}
-.detail-title { font-size: 23px; margin: 15px 0 8px; }
-.detail-description { color: #bbb; line-height: 1.5; }
-.spec-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid #303030;
-  padding: 10px 0;
-  font-size: 14px;
-}
-.spec-name { color: #aaa; }
-.detail-price { font-size: 24px; color: var(--red); font-weight: bold; margin: 18px 0; }
-.cart-item {
-  border-bottom: 1px solid #333;
-  padding: 13px 0;
-}
-.cart-item-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-.cart-item-name { font-weight: bold; }
-.quantity {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-}
-.quantity button, .remove-button {
-  background: #292929;
-  color: white;
-  border: 1px solid #444;
-  border-radius: 7px;
-  padding: 7px 12px;
-}
-.remove-button { color: #ff7777; }
-.total {
-  font-size: 19px;
-  font-weight: bold;
-  margin: 18px 0;
-}
-.field { margin: 14px 0; }
-.field label {
-  display: block;
-  margin-bottom: 7px;
-  color: #ccc;
-  font-size: 14px;
-}
-.field input, .field select, .field textarea {
-  width: 100%;
-  background: #090909;
-  border: 1px solid #444;
-  color: white;
-  padding: 13px;
-  border-radius: 8px;
-  outline: none;
-}
-.field textarea { min-height: 75px; resize: vertical; }
-.summary {
-  background: #202020;
-  border-radius: 9px;
-  padding: 13px;
-  margin: 15px 0;
-}
-.notice {
-  color: #aaa;
-  font-size: 12px;
-  line-height: 1.5;
-  margin-top: 13px;
-}
-footer {
-  text-align: center;
-  padding: 25px;
-  color: #777;
-  border-top: 1px solid #222;
-  font-size: 12px;
-}
-@media (min-width: 650px) {
-  .products { grid-template-columns: repeat(3,minmax(0,1fr)); }
-}
-@media (min-width: 900px) {
-  .products { grid-template-columns: repeat(4,minmax(0,1fr)); }
+*{box-sizing:border-box}
+body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif}
+header{padding:18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #292929;position:sticky;top:0;background:#090909;z-index:10}
+.logo{font-size:22px;font-weight:bold}
+.logo span{color:#ed2929}
+button{cursor:pointer}
+.cart-button,.add,.checkout{background:#ed2929;color:white;border:0;border-radius:9px;padding:11px 15px;font-weight:bold}
+.hero{padding:35px 20px;text-align:center;background:linear-gradient(135deg,#191919,#080808)}
+.hero h1{font-size:30px;margin:0 0 10px}
+.hero h1 span{color:#ed2929}
+.hero p{color:#aaa;margin:0}
+.categories{display:flex;gap:8px;overflow-x:auto;padding:16px}
+.category{flex-shrink:0;border:1px solid #444;color:white;background:#171717;padding:10px 14px;border-radius:20px}
+.category.active{background:#ed2929;border-color:#ed2929}
+.section-title{padding:0 16px;font-size:21px}
+#products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px}
+.product{background:#171717;border:1px solid #292929;border-radius:12px;overflow:hidden;min-width:0;cursor:pointer}
+.photo{position:relative;height:210px;background:#252525;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.photo img{width:100%;height:100%;object-fit:contain}
+.photo-placeholder{font-size:48px}
+.gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:50%;background:rgba(0,0,0,.75);color:white;font-size:25px;display:flex;align-items:center;justify-content:center;z-index:2}
+.gallery-arrow.left{left:7px}
+.gallery-arrow.right{right:7px}
+.gallery-dots{position:absolute;bottom:9px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:2}
+.gallery-dot{width:8px;height:8px;border:0;border-radius:50%;background:#777;padding:0}
+.gallery-dot.active{background:#ed2929}
+.info{padding:12px}
+.info h3{font-size:16px;margin:0 0 8px}
+.info p{font-size:12px;color:#aaa;min-height:30px;margin:0 0 10px}
+.price{font-size:18px;font-weight:bold;margin-bottom:12px}
+.add{width:100%}
+.empty{color:#999;text-align:center;padding:30px 15px;grid-column:1/-1}
+
+/* Страница товара */
+#product-page{display:none;padding:15px;max-width:650px;margin:auto}
+.back-button{background:#222;color:white;border:1px solid #444;border-radius:9px;padding:11px 15px;margin-bottom:15px}
+.detail-photo{position:relative;background:#181818;border-radius:14px;overflow:hidden;height:340px;display:flex;align-items:center;justify-content:center}
+.detail-photo img{width:100%;height:100%;object-fit:contain;cursor:zoom-in}
+.detail-photo .gallery-arrow{width:42px;height:42px;font-size:30px}
+.detail-photo .gallery-dots{bottom:13px}
+.detail-title{font-size:25px;margin:20px 0 10px}
+.detail-price{font-size:27px;font-weight:bold;color:#fff;margin:15px 0}
+.stock{color:#8edb91;font-size:14px;margin:10px 0}
+.detail-section{background:#171717;border:1px solid #292929;border-radius:12px;padding:15px;margin-top:15px}
+.detail-section h3{margin:0 0 12px;font-size:17px}
+.detail-description{color:#ccc;line-height:1.5;white-space:pre-wrap}
+.spec-row{display:flex;justify-content:space-between;gap:15px;padding:10px 0;border-bottom:1px solid #333;font-size:14px}
+.spec-row:last-child{border-bottom:0}
+.spec-name{color:#999}
+.spec-value{text-align:right;overflow-wrap:anywhere}
+.detail-add{width:100%;padding:15px;font-size:16px;margin-top:18px}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:50;align-items:center;justify-content:center}
+#lightbox img{max-width:96%;max-height:85%;object-fit:contain}
+#lightbox-close{position:absolute;right:20px;top:20px;background:#333;color:white;border:0;border-radius:50%;width:42px;height:42px;font-size:25px}
+
+/* Корзина и оформление */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:30;padding:18px;overflow-y:auto}
+.modal-content{background:#171717;border:1px solid #333;border-radius:14px;padding:18px;max-width:450px;margin:35px auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center}
+.close{background:none;color:white;border:0;font-size:27px}
+.cart-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid #333}
+.cart-item-name{flex:1;font-size:14px}
+.quantity{display:flex;align-items:center;gap:8px}
+.quantity button{background:#333;color:white;border:0;border-radius:6px;width:27px;height:27px;font-size:17px}
+.remove{background:none;color:#ed2929;border:0;font-size:18px}
+.total{font-size:20px;font-weight:bold;margin:18px 0}
+.checkout{width:100%}
+.field{margin:13px 0}
+.field label{display:block;margin-bottom:7px;color:#bbb;font-size:13px}
+.field input,.field textarea{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:white;font-size:15px}
+.field textarea{min-height:75px;resize:vertical}
+footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;margin-top:25px}
+
+@media(max-width:360px){
+ #products{gap:8px;padding:8px}
+ .photo{height:175px}
+ .info{padding:9px}
+ .info h3{font-size:14px}
+ .detail-photo{height:280px}
 }
 </style>
 </head>
@@ -307,459 +93,399 @@ footer {
 <body>
 
 <header>
-  <div class="header-inner">
-    <div class="logo">PULSE <span>SOUND</span></div>
-    <button class="cart-button" id="open-cart">🛒 Корзина <span id="cart-count">0</span></button>
-  </div>
+  <div class="logo">PULSE <span>SOUND</span></div>
+  <button class="cart-button" onclick="openCart()">🛒 Корзина <span id="cart-count">0</span></button>
 </header>
 
-<main>
+<main id="catalog-page">
   <section class="hero">
     <h1>PULSE <span>SOUND</span></h1>
-    <p>Магазин автозвука. Сабвуферы, усилители и оборудование для мощного баса.</p>
+    <p>Магазин автомобильного звука</p>
   </section>
 
-  <h2 class="section-title">Каталог товаров</h2>
-  <div class="categories" id="categories">
-    <button class="category active" data-category="all">Все товары</button>
-    <button class="category" data-category="sub">Сабвуферы</button>
-    <button class="category" data-category="amplifier">Усилители</button>
-    <button class="category" data-category="accessories">Аксессуары</button>
+  <div class="categories">
+    <button class="category active" onclick="filterProducts('all',this)">Все товары</button>
+    <button class="category" onclick="filterProducts('sub',this)">Сабвуферы</button>
+    <button class="category" onclick="filterProducts('amp',this)">Усилители</button>
+    <button class="category" onclick="filterProducts('speaker',this)">Динамики</button>
+    <button class="category" onclick="filterProducts('accessory',this)">Аксессуары</button>
   </div>
 
-  <div class="products" id="products">
-    <div class="loading">Загружаем каталог...</div>
-  </div>
+  <h2 class="section-title">Каталог товаров</h2>
+  <div id="products"><div class="empty">Загружаем каталог...</div></div>
 </main>
 
-<footer>© Pulse Sound Store</footer>
+<!-- Страница товара -->
+<main id="product-page">
+  <button class="back-button" onclick="closeProduct()">← Назад в каталог</button>
+  <div id="product-detail"></div>
+</main>
 
-<!-- Окно товара -->
-<div class="modal" id="product-modal">
+<!-- Увеличенная фотография -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightbox-image" src="" alt="Фото товара">
+</div>
+
+<!-- Корзина -->
+<div class="modal" id="cart-modal">
   <div class="modal-content">
-    <button class="close" data-close="product-modal">×</button>
-    <div id="product-detail"></div>
+    <div class="modal-header">
+      <h2>Корзина</h2>
+      <button class="close" onclick="closeCart()">×</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="total" id="cart-total">Итого: 0 ₽</div>
+    <button class="checkout" onclick="openOrder()">Оформить заказ</button>
   </div>
 </div>
 
-<!-- Корзина и оформление -->
-<div class="modal" id="cart-modal">
+<!-- Оформление заказа -->
+<div class="modal" id="order-modal">
   <div class="modal-content">
-    <button class="close" data-close="cart-modal">×</button>
-    <h2>Корзина</h2>
-    <div id="cart-items"></div>
-    <div id="cart-total" class="total"></div>
-    <button class="primary-button" id="checkout-button" style="width:100%">Оформить заказ</button>
-
-    <form id="order-form" style="display:none">
-      <h2>Оформление заказа</h2>
-
+    <div class="modal-header">
+      <h2>Оформление</h2>
+      <button class="close" onclick="closeOrder()">×</button>
+    </div>
+    <form id="order-form">
       <div class="field">
-        <label for="customer-name">Ваше имя</label>
+        <label>Ваше имя</label>
         <input id="customer-name" required placeholder="Введите имя">
       </div>
-
       <div class="field">
-        <label for="customer-phone">Телефон</label>
-        <input id="customer-phone" type="tel" required placeholder="+7...">
+        <label>Телефон</label>
+        <input id="customer-phone" required type="tel" placeholder="+7...">
       </div>
-
       <div class="field">
-        <label for="delivery-method">Доставка</label>
-        <select id="delivery-method" required>
-          <option value="local">По городу — 300 ₽</option>
-          <option value="other">Другой город — стоимость уточним</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="delivery-address">Адрес доставки</label>
-        <input id="delivery-address" required placeholder="Улица, дом, квартира">
-      </div>
-
-      <div class="field">
-        <label for="customer-comment">Комментарий</label>
+        <label>Комментарий</label>
         <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
       </div>
-
-      <div class="summary" id="order-summary"></div>
-      <button class="primary-button" type="submit" style="width:100%">Подтвердить заказ</button>
-      <p class="notice">После подтверждения заказ пока не отправляется автоматически. Свяжитесь с магазином для согласования.</p>
+      <button class="checkout" type="submit">Подтвердить заказ</button>
     </form>
   </div>
 </div>
 
+<footer>
+  PULSE SOUND STORE<br>
+  Автозвук без компромиссов
+</footer>
+
 <script>
-const API_URL = "https://pwxnijzrywcukatlyllc.supabase.co/functions/v1/products-api";
+const API_URL="https://pwxnijzrywcukatlyllc.supabase.co/functions/v1/products-api";
 
-let products = [];
-let cart = [];
-let activeCategory = "all";
+let items=[];
+let cart=[];
+let currentCategory="all";
+let galleryIndexes={};
+let detailProductId=null;
+let detailPhotoIndex=0;
 
-const productsBox = document.getElementById("products");
-const cartCount = document.getElementById("cart-count");
+const emojis={sub:"🔊",amp:"🔌",speaker:"🔈",accessory:"🧰"};
 
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  })[char]);
+function money(value){
+  return Number(value||0).toLocaleString("ru-RU")+" ₽";
 }
 
-function money(value) {
-  return new Intl.NumberFormat("ru-RU").format(Number(value) || 0) + " ₽";
+function escapeHTML(value){
+  return String(value??"").replace(/[&<>"']/g,char=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[char]));
 }
 
-function productImages(product) {
-  return [
-    product.image_url,
-    product.image_url_2,
-    product.image_url_3
-  ].filter(Boolean);
+function safeImage(url){
+  if(!url)return "";
+  try{
+    const parsed=new URL(url);
+    if(parsed.protocol==="https:"||parsed.protocol==="http:")return parsed.href;
+  }catch(e){}
+  return "";
 }
 
-function showModal(id) {
-  document.getElementById(id).classList.add("open");
-}
+async function loadProducts(){
+  const box=document.getElementById("products");
+  try{
+    const response=await fetch(API_URL);
+    if(!response.ok)throw new Error("Ошибка загрузки");
+    const result=await response.json();
+    if(!Array.isArray(result.products))throw new Error("Неверный формат каталога");
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove("open");
-}
+    items=result.products.map(p=>({
+      id:Number(p.id),
+      name:p.name,
+      cat:p.category||"accessory",
+      desc:p.description||"",
+      price:Number(p.price),
+      stock:Number(p.stock||0),
+      image:safeImage(p.image_url),
+      images:[p.image_url,p.image_url_2,p.image_url_3].map(safeImage).filter(Boolean),
+      specs:p.specifications||p.specs||null,
+      emoji:emojis[p.category]||"🔊"
+    })).filter(p=>p.id&&p.name);
 
-document.querySelectorAll("[data-close]").forEach(button => {
-  button.addEventListener("click", () => closeModal(button.dataset.close));
-});
-
-document.querySelectorAll(".modal").forEach(modal => {
-  modal.addEventListener("click", event => {
-    if (event.target === modal) modal.classList.remove("open");
-  });
-});
-
-async function loadProducts() {
-  productsBox.innerHTML = '<div class="loading">Загружаем каталог...</div>';
-
-  try {
-    const response = await fetch(API_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("Ошибка сервера: " + response.status);
-
-    const result = await response.json();
-    products = Array.isArray(result) ? result : result.products;
-
-    if (!Array.isArray(products)) {
-      throw new Error("Сервер вернул каталог в неизвестном формате");
-    }
-
-    renderProducts();
-  } catch (error) {
+    render();
+  }catch(error){
     console.error(error);
-    productsBox.innerHTML =
-      '<div class="error">Не удалось загрузить каталог.<br>' +
-      escapeHTML(error.message) +
-      '<br><br>Обновите страницу немного позже.</div>';
+    box.innerHTML='<div class="empty">Не удалось загрузить каталог. Обновите страницу позже.</div>';
   }
 }
 
-function renderProducts() {
-  const filtered = activeCategory === "all"
-    ? products
-    : products.filter(p => p.category === activeCategory);
+function render(list){
+  const box=document.getElementById("products");
+  const products=list||(
+    currentCategory==="all"?items:items.filter(p=>p.cat===currentCategory)
+  );
 
-  if (!filtered.length) {
-    productsBox.innerHTML = '<div class="empty">В этой категории пока нет товаров.</div>';
+  if(!products.length){
+    box.innerHTML='<div class="empty">В этой категории пока нет товаров.</div>';
     return;
   }
 
-  productsBox.innerHTML = filtered.map(product => {
-    const images = productImages(product);
-    const image = images[0] || "";
-    const stock = Number(product.stock) || 0;
+  box.innerHTML=products.map(p=>{
+    const photos=p.images||[];
+    const index=galleryIndexes[p.id]||0;
+    const photo=photos[index]||"";
 
     return `
-      <article class="product-card">
-        <div class="product-image">
-          ${image
-            ? `<img src="${escapeHTML(image)}" alt="${escapeHTML(product.name)}" loading="lazy">`
-            : '<div class="empty">Нет фото</div>'}
-          ${images.length > 1 ? `
-            <div class="image-nav">
-              <button data-image-prev="${product.id}">‹</button>
-              <button data-image-next="${product.id}">›</button>
-            </div>` : ""}
+      <div class="product" onclick="openProduct(${p.id})">
+        <div class="photo">
+          ${photo?`
+            <img src="${photo}" alt="${escapeHTML(p.name)}">
+            ${photos.length>1?`
+              <button class="gallery-arrow left" onclick="event.stopPropagation();changeCardPhoto(${p.id},-1)">‹</button>
+              <button class="gallery-arrow right" onclick="event.stopPropagation();changeCardPhoto(${p.id},1)">›</button>
+              <div class="gallery-dots">
+                ${photos.map((url,i)=>`
+                  <button class="gallery-dot ${i===index?"active":""}" onclick="event.stopPropagation();selectCardPhoto(${p.id},${i})"></button>
+                `).join("")}
+              </div>
+            `:""}
+          `:`<div class="photo-placeholder">${p.emoji}</div>`}
         </div>
-        <div class="product-info">
-          <h3>${escapeHTML(product.name)}</h3>
-          <div class="product-description">${escapeHTML(product.description || "")}</div>
-          <div class="price">${money(product.price)}</div>
-          <div class="stock">${stock > 0 ? "В наличии: " + stock : "Нет в наличии"}</div>
-          <div class="card-actions">
-            <button class="details-button" data-details="${product.id}">Подробнее</button>
-            <button class="add-button" data-add="${product.id}" ${stock < 1 ? "disabled" : ""}>
-              В корзину
-            </button>
-          </div>
+        <div class="info">
+          <h3>${escapeHTML(p.name)}</h3>
+          <p>${escapeHTML(p.desc)}</p>
+          <div class="price">${money(p.price)}</div>
+          <button class="add" onclick="event.stopPropagation();addToCart(${p.id})">В корзину</button>
         </div>
-      </article>
+      </div>
     `;
   }).join("");
 }
 
-document.getElementById("categories").addEventListener("click", event => {
-  const button = event.target.closest("[data-category]");
-  if (!button) return;
-
-  activeCategory = button.dataset.category;
-
-  document.querySelectorAll(".category").forEach(item => {
-    item.classList.toggle("active", item === button);
-  });
-
-  renderProducts();
-});
-
-productsBox.addEventListener("click", event => {
-  const detailsButton = event.target.closest("[data-details]");
-  const addButton = event.target.closest("[data-add]");
-  const nextButton = event.target.closest("[data-image-next]");
-  const prevButton = event.target.closest("[data-image-prev]");
-
-  if (detailsButton) openProduct(detailsButton.dataset.details);
-  if (addButton) addToCart(addButton.dataset.add);
-  if (nextButton) changeCardImage(nextButton, 1);
-  if (prevButton) changeCardImage(prevButton, -1);
-});
-
-function changeCardImage(button, direction) {
-  const product = products.find(p => String(p.id) === button.dataset.imageNext ||
-    String(p.id) === button.dataset.imagePrev);
-  if (!product) return;
-
-  const images = productImages(product);
-  if (images.length < 2) return;
-
-  const container = button.closest(".product-image");
-  const img = container.querySelector("img");
-  if (!img) return;
-
-  let index = Number(img.dataset.index || 0);
-  index = (index + direction + images.length) % images.length;
-  img.dataset.index = index;
-  img.src = images[index];
+function changeCardPhoto(id,direction){
+  const p=items.find(x=>x.id===id);
+  if(!p||p.images.length<2)return;
+  galleryIndexes[id]=((galleryIndexes[id]||0)+direction+p.images.length)%p.images.length;
+  render();
 }
 
-function openProduct(id) {
-  const product = products.find(p => String(p.id) === String(id));
-  if (!product) return;
+function selectCardPhoto(id,index){
+  const p=items.find(x=>x.id===id);
+  if(!p||!p.images[index])return;
+  galleryIndexes[id]=index;
+  render();
+}
 
-  const images = productImages(product);
-  const specs = product.specifications || {};
+function filterProducts(category,button){
+  currentCategory=category;
+  document.querySelectorAll(".category").forEach(b=>b.classList.remove("active"));
+  button.classList.add("active");
+  render();
+}
 
-  document.getElementById("product-detail").innerHTML = `
-    ${images.length ? `<img class="detail-image" src="${escapeHTML(images[0])}" alt="">` : ""}
-    ${images.length > 1 ? `
-      <div class="image-nav" style="position:relative;justify-content:center;gap:15px;padding:10px">
-        <button id="detail-prev">‹</button>
-        <span id="detail-image-count">1 / ${images.length}</span>
-        <button id="detail-next">›</button>
-      </div>` : ""}
-    <h2 class="detail-title">${escapeHTML(product.name)}</h2>
-    <p class="detail-description">${escapeHTML(product.description || "")}</p>
-    <h3>Характеристики</h3>
-    ${Object.entries(specs).map(([key, value]) => `
-      <div class="spec-row">
-        <span class="spec-name">${escapeHTML(key)}</span>
-        <strong>${escapeHTML(value)}</strong>
-      </div>
-    `).join("")}
-    <div class="detail-price">${money(product.price)}</div>
-    <button class="primary-button" id="detail-add" style="width:100%" ${Number(product.stock) < 1 ? "disabled" : ""}>
-      Добавить в корзину
+/* Открытие подробной страницы товара */
+function openProduct(id){
+  const p=items.find(x=>x.id===id);
+  if(!p)return;
+
+  detailProductId=id;
+  detailPhotoIndex=0;
+
+  document.getElementById("catalog-page").style.display="none";
+  document.getElementById("product-page").style.display="block";
+
+  renderProductDetail();
+  window.scrollTo(0,0);
+}
+
+function closeProduct(){
+  document.getElementById("product-page").style.display="none";
+  document.getElementById("catalog-page").style.display="block";
+  detailProductId=null;
+  window.scrollTo(0,0);
+}
+
+function renderProductDetail(){
+  const p=items.find(x=>x.id===detailProductId);
+  if(!p)return;
+
+  const photos=p.images||[];
+  const photo=photos[detailPhotoIndex]||"";
+
+  let specsHTML="";
+  if(p.specs&&typeof p.specs==="object"){
+    const entries=Array.isArray(p.specs)
+      ?p.specs.map(s=>[s.name||s.title,s.value])
+      :Object.entries(p.specs);
+
+    specsHTML=entries.filter(([name,value])=>name&&value!==undefined&&value!==null&&value!=="")
+      .map(([name,value])=>`
+        <div class="spec-row">
+          <span class="spec-name">${escapeHTML(name)}</span>
+          <span class="spec-value">${escapeHTML(value)}</span>
+        </div>
+      `).join("");
+  }
+
+  document.getElementById("product-detail").innerHTML=`
+    <div class="detail-photo">
+      ${photo?`
+        <img src="${photo}" alt="${escapeHTML(p.name)}" onclick="openLightbox('${photo.replace(/'/g,"%27")}')">
+        ${photos.length>1?`
+          <button class="gallery-arrow left" onclick="changeDetailPhoto(-1)">‹</button>
+          <button class="gallery-arrow right" onclick="changeDetailPhoto(1)">›</button>
+          <div class="gallery-dots">
+            ${photos.map((url,i)=>`
+              <button class="gallery-dot ${i===detailPhotoIndex?"active":""}" onclick="selectDetailPhoto(${i})"></button>
+            `).join("")}
+          </div>
+        `:""}
+      `:`<div class="photo-placeholder">${p.emoji}</div>`}
+    </div>
+
+    <h1 class="detail-title">${escapeHTML(p.name)}</h1>
+    <div class="detail-price">${money(p.price)}</div>
+    <div class="stock">${p.stock>0?"✓ В наличии: "+p.stock+" шт.":"Нет в наличии"}</div>
+
+    <div class="detail-section">
+      <h3>Описание товара</h3>
+      <div class="detail-description">${escapeHTML(p.desc||"Описание скоро появится.")}</div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Характеристики</h3>
+      ${specsHTML||'<div class="detail-description">Характеристики этого товара пока не заполнены.</div>'}
+    </div>
+
+    <button class="add detail-add" onclick="addToCart(${p.id})" ${p.stock<1?"disabled":""}>
+      ${p.stock>0?"Добавить в корзину":"Нет в наличии"}
     </button>
   `;
-
-  let imageIndex = 0;
-  const detailImage = document.querySelector(".detail-image");
-
-  function setDetailImage(direction) {
-    if (!detailImage || !images.length) return;
-    imageIndex = (imageIndex + direction + images.length) % images.length;
-    detailImage.src = images[imageIndex];
-    document.getElementById("detail-image-count").textContent =
-      (imageIndex + 1) + " / " + images.length;
-  }
-
-  document.getElementById("detail-prev")?.addEventListener("click", () => setDetailImage(-1));
-  document.getElementById("detail-next")?.addEventListener("click", () => setDetailImage(1));
-  document.getElementById("detail-add")?.addEventListener("click", () => {
-    addToCart(id);
-    closeModal("product-modal");
-  });
-
-  showModal("product-modal");
 }
 
-function addToCart(id) {
-  const product = products.find(p => String(p.id) === String(id));
-  if (!product || Number(product.stock) < 1) return;
+function changeDetailPhoto(direction){
+  const p=items.find(x=>x.id===detailProductId);
+  if(!p||p.images.length<2)return;
+  detailPhotoIndex=(detailPhotoIndex+direction+p.images.length)%p.images.length;
+  renderProductDetail();
+}
 
-  const existing = cart.find(item => String(item.id) === String(id));
+function selectDetailPhoto(index){
+  const p=items.find(x=>x.id===detailProductId);
+  if(!p||!p.images[index])return;
+  detailPhotoIndex=index;
+  renderProductDetail();
+}
 
-  if (existing) {
-    if (existing.qty >= Number(product.stock)) {
-      alert("Больше товара нет в наличии.");
-      return;
-    }
+function openLightbox(url){
+  document.getElementById("lightbox-image").src=url;
+  document.getElementById("lightbox").style.display="flex";
+}
+
+function closeLightbox(){
+  document.getElementById("lightbox").style.display="none";
+  document.getElementById("lightbox-image").src="";
+}
+
+function addToCart(id){
+  const p=items.find(x=>x.id===id);
+  if(!p)return;
+
+  const existing=cart.find(x=>x.id===id);
+  if(existing){
+    if(existing.qty>=p.stock){alert("Больше товаров нет в наличии");return;}
     existing.qty++;
-  } else {
-    cart.push({ ...product, qty: 1 });
+  }else{
+    if(p.stock<1){alert("Товара сейчас нет в наличии");return;}
+    cart.push({...p,qty:1});
   }
-
   updateCart();
 }
 
-function updateCart() {
-  const count = cart.reduce((sum, item) => sum + item.qty, 0);
-  cartCount.textContent = count;
+function updateCart(){
+  document.getElementById("cart-count").textContent=cart.reduce((s,p)=>s+p.qty,0);
+  const container=document.getElementById("cart-items");
 
-  const itemsBox = document.getElementById("cart-items");
-
-  if (!cart.length) {
-    itemsBox.innerHTML = '<div class="empty">Корзина пока пустая.</div>';
-    document.getElementById("cart-total").textContent = "";
-    document.getElementById("checkout-button").style.display = "none";
-    document.getElementById("order-form").style.display = "none";
-    return;
-  }
-
-  document.getElementById("checkout-button").style.display = "block";
-
-  itemsBox.innerHTML = cart.map(item => `
-    <div class="cart-item">
-      <div class="cart-item-top">
-        <div>
-          <div class="cart-item-name">${escapeHTML(item.name)}</div>
-          <div class="product-description">${money(item.price)} за штуку</div>
+  if(!cart.length){
+    container.innerHTML='<div class="empty">Корзина пока пустая</div>';
+  }else{
+    container.innerHTML=cart.map(p=>`
+      <div class="cart-item">
+        <div class="cart-item-name">${escapeHTML(p.name)}<br><small>${money(p.price)}</small></div>
+        <div class="quantity">
+          <button onclick="changeQuantity(${p.id},-1)">−</button>
+          <span>${p.qty}</span>
+          <button onclick="changeQuantity(${p.id},1)">+</button>
         </div>
-        <strong>${money(item.price * item.qty)}</strong>
+        <button class="remove" onclick="removeFromCart(${p.id})">×</button>
       </div>
-      <div class="quantity">
-        <button data-minus="${item.id}">−</button>
-        <strong>${item.qty}</strong>
-        <button data-plus="${item.id}">+</button>
-        <button class="remove-button" data-remove="${item.id}">Удалить</button>
-      </div>
-    </div>
-  `).join("");
+    `).join("");
+  }
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  document.getElementById("cart-total").textContent = "Товары: " + money(subtotal);
-
-  calculateOrder();
+  const total=cart.reduce((s,p)=>s+p.price*p.qty,0);
+  document.getElementById("cart-total").textContent="Итого: "+money(total);
 }
 
-document.getElementById("cart-items").addEventListener("click", event => {
-  const plus = event.target.closest("[data-plus]");
-  const minus = event.target.closest("[data-minus]");
-  const remove = event.target.closest("[data-remove]");
-
-  if (plus) {
-    const item = cart.find(p => String(p.id) === plus.dataset.plus);
-    const product = products.find(p => String(p.id) === plus.dataset.plus);
-    if (item && product && item.qty < Number(product.stock)) item.qty++;
-  }
-
-  if (minus) {
-    const item = cart.find(p => String(p.id) === minus.dataset.minus);
-    if (item) item.qty--;
-    cart = cart.filter(p => p.qty > 0);
-  }
-
-  if (remove) {
-    cart = cart.filter(p => String(p.id) !== remove.dataset.remove);
-  }
-
+function changeQuantity(id,change){
+  const p=cart.find(x=>x.id===id);
+  if(!p)return;
+  const catalog=items.find(x=>x.id===id);
+  const next=p.qty+change;
+  if(next<=0){removeFromCart(id);return;}
+  if(catalog&&next>catalog.stock){alert("Больше товаров нет в наличии");return;}
+  p.qty=next;
   updateCart();
-});
+}
 
-document.getElementById("open-cart").addEventListener("click", () => {
+function removeFromCart(id){
+  cart=cart.filter(p=>p.id!==id);
   updateCart();
-  showModal("cart-modal");
-});
-
-document.getElementById("checkout-button").addEventListener("click", () => {
-  if (!cart.length) return;
-  document.getElementById("order-form").style.display = "block";
-  calculateOrder();
-});
-
-const deliveryMethod = document.getElementById("delivery-method");
-
-function calculateOrder() {
-  const summary = document.getElementById("order-summary");
-  if (!summary) return;
-
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const local = deliveryMethod.value === "local";
-  const delivery = local ? 300 : 0;
-  const total = subtotal + delivery;
-
-  summary.innerHTML = `
-    <div class="spec-row"><span>Товары</span><strong>${money(subtotal)}</strong></div>
-    <div class="spec-row"><span>Доставка</span><strong>${local ? "300 ₽" : "Уточняется"}</strong></div>
-    <div class="spec-row"><strong>Итого</strong><strong>${money(total)}${local ? "" : " + доставка"}</strong></div>
-  `;
 }
 
-deliveryMethod.addEventListener("change", calculateOrder);
+function openCart(){
+  updateCart();
+  document.getElementById("cart-modal").style.display="block";
+}
+function closeCart(){
+  document.getElementById("cart-modal").style.display="none";
+}
+function openOrder(){
+  if(!cart.length){alert("Корзина пустая");return;}
+  closeCart();
+  document.getElementById("order-modal").style.display="block";
+}
+function closeOrder(){
+  document.getElementById("order-modal").style.display="none";
+}
 
-document.getElementById("order-form").addEventListener("submit", event => {
-  event.preventDefault();
-
-  if (!cart.length) {
-    alert("Корзина пуста.");
-    return;
-  }
-
-  const name = document.getElementById("customer-name").value.trim();
-  const phone = document.getElementById("customer-phone").value.trim();
-  const address = document.getElementById("delivery-address").value.trim();
-
-  if (!name || !phone || !address) {
-    alert("Заполните имя, телефон и адрес.");
-    return;
-  }
-
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const local = deliveryMethod.value === "local";
-  const total = subtotal + (local ? 300 : 0);
-
-  const orderText = cart.map(item =>
-    item.name + " × " + item.qty + " — " + money(item.price * item.qty)
-  ).join("\n");
-
-  alert(
-    "Заявка заполнена!\n\n" +
-    orderText + "\n\n" +
-    "Товары: " + money(subtotal) + "\n" +
-    "Доставка: " + (local ? "300 ₽" : "уточняется") + "\n" +
-    "Итого: " + money(total) + (local ? "" : " + доставка") +
-    "\n\nИмя: " + name +
-    "\nТелефон: " + phone +
-    "\nАдрес: " + address +
-    "\n\nЭто демонстрация оформления. Заказ ещё не отправлен продавцу."
-  );
+document.getElementById("order-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  alert("Каталог подключён. Отправка заказов будет подключена следующим этапом.");
+  closeOrder();
 });
 
-if (window.Telegram && window.Telegram.WebApp) {
-  window.Telegram.WebApp.ready();
-  window.Telegram.WebApp.expand();
-}
+window.addEventListener("click",function(e){
+  if(e.target.id==="cart-modal")closeCart();
+  if(e.target.id==="order-modal")closeOrder();
+  if(e.target.id==="lightbox")closeLightbox();
+});
+
+window.addEventListener("keydown",function(e){
+  if(e.key==="Escape")closeLightbox();
+});
 
 loadProducts();
+updateCart();
 </script>
-
 </body>
 </html>
