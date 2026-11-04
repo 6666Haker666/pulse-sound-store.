@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -13,6 +12,7 @@ header{padding:18px;display:flex;justify-content:space-between;align-items:cente
 .logo{font-size:22px;font-weight:bold}
 .logo span{color:#ed2929}
 button{cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
 .cart-button,.add,.checkout{background:#ed2929;color:white;border:0;border-radius:9px;padding:11px 15px;font-weight:bold}
 .hero{padding:35px 20px;text-align:center;background:linear-gradient(135deg,#191919,#080808)}
 .hero h1{font-size:30px;margin:0 0 10px}
@@ -76,7 +76,7 @@ button{cursor:pointer}
 .checkout{width:100%}
 .field{margin:13px 0}
 .field label{display:block;margin-bottom:7px;color:#bbb;font-size:13px}
-.field input,.field textarea{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:white;font-size:15px}
+.field input,.field textarea,.field select{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:white;font-size:15px}
 .field textarea{min-height:75px;resize:vertical}
 footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;margin-top:25px}
 
@@ -147,52 +147,38 @@ footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;ma
       <h2>Оформление</h2>
       <button class="close" onclick="closeOrder()">×</button>
     </div>
+
     <form id="order-form">
-
-  <div class="field">
-    <label>Ваше имя</label>
-    <input id="customer-name" required placeholder="Введите имя">
-  </div>
-
-  <div class="field">
-    <label>Телефон</label>
-    <input id="customer-phone" required type="tel" placeholder="+7...">
-  </div>
-
-  <div class="field">
-    <label>Способ доставки</label>
-    <select id="delivery-method" required
-      style="width:100%;padding:12px;background:#090909;color:white;border:1px solid #444;border-radius:8px">
-      <option value="local">Доставка по городу — 300 ₽</option>
-      <option value="other">Другой город — стоимость уточним</option>
-    </select>
-  </div>
-
-  <div class="field">
-    <label>Адрес доставки</label>
-    <input id="delivery-address" placeholder="Улица, дом, квартира">
-  </div>
-
-  <div class="field">
-    <label>Комментарий</label>
-    <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
-  </div>
-
-  <button class="checkout" type="submit">Подтвердить заказ</button>
-
-</form>
       <div class="field">
         <label>Ваше имя</label>
         <input id="customer-name" required placeholder="Введите имя">
       </div>
+
       <div class="field">
         <label>Телефон</label>
         <input id="customer-phone" required type="tel" placeholder="+7...">
       </div>
+
+      <div class="field">
+        <label>Способ доставки</label>
+        <select id="delivery-method" required>
+          <option value="local">Доставка по городу — 300 ₽</option>
+          <option value="other">Другой город — стоимость уточним</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Адрес доставки</label>
+        <input id="delivery-address" required placeholder="Улица, дом, квартира">
+      </div>
+
       <div class="field">
         <label>Комментарий</label>
         <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
       </div>
+
+      <div id="order-summary" class="detail-section"></div>
+
       <button class="checkout" type="submit">Подтвердить заказ</button>
     </form>
   </div>
@@ -213,7 +199,12 @@ let galleryIndexes={};
 let detailProductId=null;
 let detailPhotoIndex=0;
 
-const emojis={sub:"🔊",amp:"🔌",speaker:"🔈",accessory:"🧰"};
+const emojis={
+  sub:"🔊",
+  amp:"🔌",
+  speaker:"🔈",
+  accessory:"🧰"
+};
 
 function money(value){
   return Number(value||0).toLocaleString("ru-RU")+" ₽";
@@ -221,7 +212,11 @@ function money(value){
 
 function escapeHTML(value){
   return String(value??"").replace(/[&<>"']/g,char=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
   }[char]));
 }
 
@@ -236,11 +231,17 @@ function safeImage(url){
 
 async function loadProducts(){
   const box=document.getElementById("products");
+
   try{
     const response=await fetch(API_URL);
+
     if(!response.ok)throw new Error("Ошибка загрузки");
+
     const result=await response.json();
-    if(!Array.isArray(result.products))throw new Error("Неверный формат каталога");
+
+    if(!Array.isArray(result.products)){
+      throw new Error("Неверный формат каталога");
+    }
 
     items=result.products.map(p=>({
       id:Number(p.id),
@@ -250,22 +251,27 @@ async function loadProducts(){
       price:Number(p.price),
       stock:Number(p.stock||0),
       image:safeImage(p.image_url),
-      images:[p.image_url,p.image_url_2,p.image_url_3].map(safeImage).filter(Boolean),
+      images:[p.image_url,p.image_url_2,p.image_url_3]
+        .map(safeImage).filter(Boolean),
       specs:p.specifications||p.specs||null,
       emoji:emojis[p.category]||"🔊"
     })).filter(p=>p.id&&p.name);
 
     render();
+
   }catch(error){
-    console.error(error);
+    console.error("Ошибка каталога:",error);
     box.innerHTML='<div class="empty">Не удалось загрузить каталог. Обновите страницу позже.</div>';
   }
 }
 
 function render(list){
   const box=document.getElementById("products");
+
   const products=list||(
-    currentCategory==="all"?items:items.filter(p=>p.cat===currentCategory)
+    currentCategory==="all"
+      ?items
+      :items.filter(p=>p.cat===currentCategory)
   );
 
   if(!products.length){
@@ -294,6 +300,7 @@ function render(list){
             `:""}
           `:`<div class="photo-placeholder">${p.emoji}</div>`}
         </div>
+
         <div class="info">
           <h3>${escapeHTML(p.name)}</h3>
           <p>${escapeHTML(p.desc)}</p>
@@ -308,25 +315,34 @@ function render(list){
 function changeCardPhoto(id,direction){
   const p=items.find(x=>x.id===id);
   if(!p||p.images.length<2)return;
-  galleryIndexes[id]=((galleryIndexes[id]||0)+direction+p.images.length)%p.images.length;
+
+  galleryIndexes[id]=(
+    (galleryIndexes[id]||0)+direction+p.images.length
+  )%p.images.length;
+
   render();
 }
 
 function selectCardPhoto(id,index){
   const p=items.find(x=>x.id===id);
   if(!p||!p.images[index])return;
+
   galleryIndexes[id]=index;
   render();
 }
 
 function filterProducts(category,button){
   currentCategory=category;
-  document.querySelectorAll(".category").forEach(b=>b.classList.remove("active"));
+
+  document.querySelectorAll(".category").forEach(b=>{
+    b.classList.remove("active");
+  });
+
   button.classList.add("active");
   render();
 }
 
-/* Открытие подробной страницы товара */
+/* Страница товара */
 function openProduct(id){
   const p=items.find(x=>x.id===id);
   if(!p)return;
@@ -344,6 +360,7 @@ function openProduct(id){
 function closeProduct(){
   document.getElementById("product-page").style.display="none";
   document.getElementById("catalog-page").style.display="block";
+
   detailProductId=null;
   window.scrollTo(0,0);
 }
@@ -356,12 +373,14 @@ function renderProductDetail(){
   const photo=photos[detailPhotoIndex]||"";
 
   let specsHTML="";
+
   if(p.specs&&typeof p.specs==="object"){
     const entries=Array.isArray(p.specs)
       ?p.specs.map(s=>[s.name||s.title,s.value])
       :Object.entries(p.specs);
 
-    specsHTML=entries.filter(([name,value])=>name&&value!==undefined&&value!==null&&value!=="")
+    specsHTML=entries
+      .filter(([name,value])=>name&&value!==undefined&&value!==null&&value!=="")
       .map(([name,value])=>`
         <div class="spec-row">
           <span class="spec-name">${escapeHTML(name)}</span>
@@ -374,9 +393,11 @@ function renderProductDetail(){
     <div class="detail-photo">
       ${photo?`
         <img src="${photo}" alt="${escapeHTML(p.name)}" onclick="openLightbox('${photo.replace(/'/g,"%27")}')">
+
         ${photos.length>1?`
           <button class="gallery-arrow left" onclick="changeDetailPhoto(-1)">‹</button>
           <button class="gallery-arrow right" onclick="changeDetailPhoto(1)">›</button>
+
           <div class="gallery-dots">
             ${photos.map((url,i)=>`
               <button class="gallery-dot ${i===detailPhotoIndex?"active":""}" onclick="selectDetailPhoto(${i})"></button>
@@ -409,13 +430,18 @@ function renderProductDetail(){
 function changeDetailPhoto(direction){
   const p=items.find(x=>x.id===detailProductId);
   if(!p||p.images.length<2)return;
-  detailPhotoIndex=(detailPhotoIndex+direction+p.images.length)%p.images.length;
+
+  detailPhotoIndex=(
+    detailPhotoIndex+direction+p.images.length
+  )%p.images.length;
+
   renderProductDetail();
 }
 
 function selectDetailPhoto(index){
   const p=items.find(x=>x.id===detailProductId);
   if(!p||!p.images[index])return;
+
   detailPhotoIndex=index;
   renderProductDetail();
 }
@@ -430,23 +456,34 @@ function closeLightbox(){
   document.getElementById("lightbox-image").src="";
 }
 
+/* Корзина */
 function addToCart(id){
   const p=items.find(x=>x.id===id);
   if(!p)return;
 
   const existing=cart.find(x=>x.id===id);
+
   if(existing){
-    if(existing.qty>=p.stock){alert("Больше товаров нет в наличии");return;}
+    if(existing.qty>=p.stock){
+      alert("Больше товаров нет в наличии");
+      return;
+    }
     existing.qty++;
   }else{
-    if(p.stock<1){alert("Товара сейчас нет в наличии");return;}
+    if(p.stock<1){
+      alert("Товара сейчас нет в наличии");
+      return;
+    }
     cart.push({...p,qty:1});
   }
+
   updateCart();
 }
 
 function updateCart(){
-  document.getElementById("cart-count").textContent=cart.reduce((s,p)=>s+p.qty,0);
+  document.getElementById("cart-count").textContent=
+    cart.reduce((s,p)=>s+p.qty,0);
+
   const container=document.getElementById("cart-items");
 
   if(!cart.length){
@@ -454,28 +491,47 @@ function updateCart(){
   }else{
     container.innerHTML=cart.map(p=>`
       <div class="cart-item">
-        <div class="cart-item-name">${escapeHTML(p.name)}<br><small>${money(p.price)}</small></div>
+        <div class="cart-item-name">
+          ${escapeHTML(p.name)}<br>
+          <small>${money(p.price)}</small>
+        </div>
+
         <div class="quantity">
           <button onclick="changeQuantity(${p.id},-1)">−</button>
           <span>${p.qty}</span>
           <button onclick="changeQuantity(${p.id},1)">+</button>
         </div>
+
         <button class="remove" onclick="removeFromCart(${p.id})">×</button>
       </div>
     `).join("");
   }
 
   const total=cart.reduce((s,p)=>s+p.price*p.qty,0);
-  document.getElementById("cart-total").textContent="Итого: "+money(total);
+
+  document.getElementById("cart-total").textContent=
+    "Итого: "+money(total);
+
+  calculateOrder();
 }
 
 function changeQuantity(id,change){
   const p=cart.find(x=>x.id===id);
   if(!p)return;
+
   const catalog=items.find(x=>x.id===id);
   const next=p.qty+change;
-  if(next<=0){removeFromCart(id);return;}
-  if(catalog&&next>catalog.stock){alert("Больше товаров нет в наличии");return;}
+
+  if(next<=0){
+    removeFromCart(id);
+    return;
+  }
+
+  if(catalog&&next>catalog.stock){
+    alert("Больше товаров нет в наличии");
+    return;
+  }
+
   p.qty=next;
   updateCart();
 }
@@ -489,31 +545,82 @@ function openCart(){
   updateCart();
   document.getElementById("cart-modal").style.display="block";
 }
+
 function closeCart(){
   document.getElementById("cart-modal").style.display="none";
 }
+
+/* Оформление заказа */
 function openOrder(){
-  if(!cart.length){alert("Корзина пустая");return;}
+  if(!cart.length){
+    alert("Корзина пустая");
+    return;
+  }
+
   closeCart();
   document.getElementById("order-modal").style.display="block";
+  calculateOrder();
 }
+
 function closeOrder(){
   document.getElementById("order-modal").style.display="none";
 }
 
-const deliveryMethod = document.getElementById("delivery-method"); const deliveryAddress = document.getElementById("delivery-address");
-const orderSummary = document.createElement("div"); orderSummary.id = "order-summary"; orderSummary.className = "detail-section"; deliveryAddress.parentElement.after(orderSummary);
-deliveryAddress.required = true;
-function calculateOrder(){ const subtotal = cart.reduce((sum,p)=>sum+p.price*p.qty,0); const method = deliveryMethod.value;
-let delivery = 0; let total = subtotal; let deliveryText = "";
-if(method === "local"){ delivery = 300; total += delivery; deliveryText = "300 ₽"; }else{ deliveryText = "Уточняется"; }
-orderSummary.innerHTML = <h3>Ваш заказ</h3> <div class="spec-row"> <span class="spec-name">Товары</span> <span>${money(subtotal)}</span> </div> <div class="spec-row"> <span class="spec-name">Доставка</span> <span>${deliveryText}</span> </div> <div class="spec-row"> <strong>Итого</strong> <strong>￼{method==="other"?" + доставка":""}</strong> </div>; }
+/* Расчёт доставки и заказа */
+const deliveryMethod=document.getElementById("delivery-method");
+const deliveryAddress=document.getElementById("delivery-address");
+const orderSummary=document.getElementById("order-summary");
+
+function calculateOrder(){
+  if(!deliveryMethod||!orderSummary)return;
+
+  const subtotal=cart.reduce(
+    (sum,p)=>sum+p.price*p.qty,0
+  );
+
+  const method=deliveryMethod.value;
+
+  let total=subtotal;
+  let deliveryText="";
+
+  if(method==="local"){
+    total+=300;
+    deliveryText="300 ₽";
+  }else{
+    deliveryText="Уточняется";
+  }
+
+  orderSummary.innerHTML=`
+    <h3>Ваш заказ</h3>
+
+    <div class="spec-row">
+      <span class="spec-name">Товары</span>
+      <span>${money(subtotal)}</span>
+    </div>
+
+    <div class="spec-row">
+      <span class="spec-name">Доставка</span>
+      <span>${deliveryText}</span>
+    </div>
+
+    <div class="spec-row">
+      <strong>Итого</strong>
+      <strong>${money(total)}${method==="other"?" + доставка":""}</strong>
+    </div>
+  `;
+}
+
 deliveryMethod.addEventListener("change",calculateOrder);
- calculateOrder();
-const oldOrderForm = document.getElementById("order-form");
-oldOrderForm.addEventListener("submit",function(e){ e.preventDefault();
-calculateOrder();
-alert("Расчёт готов. Отправка заказов в Telegram будет подключена следующим этапом."); });
+
+const orderForm=document.getElementById("order-form");
+
+orderForm.addEventListener("submit",function(e){
+  e.preventDefault();
+
+  calculateOrder();
+
+  alert("Расчёт готов. Отправка заказов в Telegram будет подключена следующим этапом.");
+});
 
 window.addEventListener("click",function(e){
   if(e.target.id==="cart-modal")closeCart();
@@ -522,11 +629,14 @@ window.addEventListener("click",function(e){
 });
 
 window.addEventListener("keydown",function(e){
-  if(e.key==="Escape")closeLightbox();
+  if(e.key==="Escape"){
+    closeLightbox();
+  }
 });
 
 loadProducts();
 updateCart();
 </script>
+
 </body>
 </html>
