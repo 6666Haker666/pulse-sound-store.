@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -23,8 +22,11 @@ button{cursor:pointer}
 .categories button.active{background:#ed2929}
 .products{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .product{background:#191919;border:1px solid #333;border-radius:12px;overflow:hidden}
-.photo{height:115px;background:#252525;display:grid;place-items:center;font-size:45px}
-.photo img{width:100%;height:100%;object-fit:contain}
+.photo{min-height:150px;background:#252525;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:45px}
+.photo img{width:100%;height:180px;object-fit:contain}
+.thumbnails{display:flex;gap:7px;justify-content:center;padding:8px}
+.thumbnails button{background:#333;color:white;border:1px solid #555;border-radius:6px;padding:7px 12px}
+.thumbnails button.active{background:#ed2929;border-color:#ed2929}
 .info{padding:11px}
 .info h3{font-size:15px;margin:0 0 8px}
 .info p{font-size:12px;color:#aaa;min-height:28px}
@@ -42,6 +44,7 @@ input,textarea{width:100%;padding:13px;margin:7px 0 14px;background:#242424;bord
 .checkout{width:100%;margin-top:10px}
 footer{text-align:center;color:#777;padding:25px}
 .status{color:#aaa;padding:15px;text-align:center;grid-column:1/-1}
+@media(max-width:360px){.products{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -101,12 +104,12 @@ footer{text-align:center;color:#777;padding:25px}
 <footer>PULSE SOUND STORE © 2026</footer>
 
 <script>
-const API_URL = "https://pwxnijzrywcukatlyllc.supabase.co/functions/v1/products-api";
+const API_URL="https://pwxnijzrywcukatlyllc.supabase.co/functions/v1/products-api";
 
-let items = [];
-let cart = [];
+let items=[];
+let cart=[];
 
-const emojis = {
+const emojis={
   sub:"🔊",
   amp:"⚡",
   speaker:"🎵",
@@ -118,7 +121,7 @@ function money(n){
 }
 
 function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g,char=>({
+  return String(value??"").replace(/[&<>"']/g,char=>({
     "&":"&amp;",
     "<":"&lt;",
     ">":"&gt;",
@@ -129,44 +132,44 @@ function escapeHTML(value){
 
 function safeImage(url){
   try{
-    const parsed = new URL(url);
-    return parsed.protocol === "https:" ? parsed.href : "";
+    const parsed=new URL(url);
+    return parsed.protocol==="https:"?parsed.href:"";
   }catch{
     return "";
   }
 }
 
 async function loadProducts(){
-  const box = document.getElementById("products");
-  box.innerHTML = '<div class="status">Загружаем каталог...</div>';
+  const box=document.getElementById("products");
+  box.innerHTML='<div class="status">Загружаем каталог...</div>';
 
   try{
-    const response = await fetch(API_URL);
+    const response=await fetch(API_URL);
 
     if(!response.ok){
       throw new Error("Ошибка загрузки: "+response.status);
     }
 
-    const result = await response.json();
+    const result=await response.json();
 
     if(!Array.isArray(result.products)){
       throw new Error("Неверный формат каталога");
     }
 
-    items = result.products.map(p=>({
-  id:Number(p.id),
-  name:p.name,
-  cat:p.category || "accessory",
-  desc:p.description || "",
-  price:Number(p.price),
-  image:safeImage(p.image_url),
-  images:[
-    safeImage(p.image_url),
-    safeImage(p.image_url_2),
-    safeImage(p.image_url_3)
-  ].filter(Boolean),
-  emoji:emojis[p.category] || "🔊"
-}));
+    items=result.products.map(p=>({
+      id:Number(p.id),
+      name:p.name,
+      cat:p.category||"accessory",
+      desc:p.description||"",
+      price:Number(p.price),
+      image:safeImage(p.image_url),
+      images:[
+        safeImage(p.image_url),
+        safeImage(p.image_url_2),
+        safeImage(p.image_url_3)
+      ].filter(Boolean),
+      emoji:emojis[p.category]||"🔊"
+    }));
 
     render();
 
@@ -180,25 +183,67 @@ async function loadProducts(){
   }
 }
 
-function render(list=items){ const box=document.getElementById("products");
-box.innerHTML=list.map(p=><div class="product"> <div class="photo"> ${p.images && p.images.length ? <img
-id="photo-${p.id}"
-src="${p.images[0]}"
-style="width:100%;height:180px;object-fit:contain;"
-> ${p.images.length > 1 ?  <div style="display:flex;gap:6px;justify-content:center;padding:8px;"> ${p.images.map((url,i)=> <button
-onclick="changePhoto(￼{i})"
-style="padding:5px 10px;"
->${i+1}</button> ).join("")} </div>  : ""} ` : p.emoji} </div>
-  <div class="info">
-    <h3>${escapeHTML(p.name)}</h3>
-    <p>${escapeHTML(p.desc)}</p>
-    <div class="price">${money(p.price)}</div>
-    <button class="add" onclick="add(${p.id})">В корзину</button>
-  </div>
-</div>
-`).join(""); }
-function changePhoto(id,index){ const product=items.find(p=>p.id===id); if(!product || !product.images[index]) return;
-const photo=document.getElementById("photo-"+id); if(photo) photo.src=product.images[index]; }
+function render(list=items){
+  const box=document.getElementById("products");
+
+  box.innerHTML=list.map(p=>{
+    const photos=p.images||[];
+    const firstPhoto=photos[0]||"";
+
+    return `
+      <div class="product">
+        <div class="photo">
+          ${
+            firstPhoto
+            ? `
+              <img id="photo-${p.id}" src="${firstPhoto}" alt="${escapeHTML(p.name)}">
+              ${
+                photos.length>1
+                ? `
+                  <div class="thumbnails">
+                    ${photos.map((url,i)=>`
+                      <button
+                        id="thumb-${p.id}-${i}"
+                        class="${i===0?"active":""}"
+                        onclick="changePhoto(${p.id},${i})"
+                      >${i+1}</button>
+                    `).join("")}
+                  </div>
+                `
+                :""
+              }
+            `
+            :p.emoji
+          }
+        </div>
+
+        <div class="info">
+          <h3>${escapeHTML(p.name)}</h3>
+          <p>${escapeHTML(p.desc)}</p>
+          <div class="price">${money(p.price)}</div>
+          <button class="add" onclick="add(${p.id})">В корзину</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function changePhoto(id,index){
+  const product=items.find(p=>p.id===id);
+  if(!product||!product.images[index])return;
+
+  const photo=document.getElementById("photo-"+id);
+  if(photo){
+    photo.src=product.images[index];
+  }
+
+  product.images.forEach((url,i)=>{
+    const button=document.getElementById("thumb-"+id+"-"+i);
+    if(button){
+      button.classList.toggle("active",i===index);
+    }
+  });
+}
 
 function filter(cat,btn){
   document.querySelectorAll(".categories button")
@@ -207,8 +252,8 @@ function filter(cat,btn){
   btn.classList.add("active");
 
   render(cat==="all"
-    ? items
-    : items.filter(p=>p.cat===cat)
+    ?items
+    :items.filter(p=>p.cat===cat)
   );
 }
 
