@@ -1,155 +1,356 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pulse Sound Store</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#090909;color:white;font-family:Arial}
-header{padding:18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333}
-.logo{font-size:21px;font-weight:900;letter-spacing:2px}
+body{
+  margin:0;
+  background:#090909;
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+header{
+  padding:18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #292929;
+  position:sticky;
+  top:0;
+  background:#090909;
+  z-index:10;
+}
+.logo{font-size:22px;font-weight:bold}
 .logo span{color:#ed2929}
-button{cursor:pointer}
-.cartbtn,.add,.checkout{background:#ed2929;color:white;border:0;padding:12px;border-radius:8px;font-weight:bold}
-.hero{text-align:center;padding:45px 15px;background:linear-gradient(145deg,#222,#080808)}
-.hero small{color:#ed2929;letter-spacing:3px}
-.hero h1{font-size:32px}
-.hero p{color:#aaa}
-.section{padding:20px 15px}
-.categories{display:flex;gap:8px;overflow:auto;margin-bottom:18px}
-.categories button{background:#191919;color:white;border:1px solid #444;padding:10px 14px;border-radius:20px;white-space:nowrap}
-.categories button.active{background:#ed2929}
-.products{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.product{background:#191919;border:1px solid #333;border-radius:12px;overflow:hidden}
-.photo{min-height:150px;background:#252525;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:45px}
-.photo img{width:100%;height:180px;object-fit:contain}
-.thumbnails{display:flex;gap:7px;justify-content:center;padding:8px}
-.thumbnails button{background:#333;color:white;border:1px solid #555;border-radius:6px;padding:7px 12px}
-.thumbnails button.active{background:#ed2929;border-color:#ed2929}
-.info{padding:11px}
-.info h3{font-size:15px;margin:0 0 8px}
-.info p{font-size:12px;color:#aaa;min-height:28px}
-.price{color:#ed2929;font-weight:bold;margin:12px 0}
+.cart-button,.add,.checkout{
+  background:#ed2929;
+  color:white;
+  border:0;
+  border-radius:9px;
+  padding:11px 15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.hero{
+  padding:35px 20px;
+  text-align:center;
+  background:linear-gradient(135deg,#191919,#080808);
+}
+.hero h1{font-size:30px;margin:0 0 10px}
+.hero h1 span{color:#ed2929}
+.hero p{color:#aaa;margin:0}
+.categories{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:16px;
+}
+.category{
+  flex-shrink:0;
+  border:1px solid #444;
+  color:white;
+  background:#171717;
+  padding:10px 14px;
+  border-radius:20px;
+  cursor:pointer;
+}
+.category.active{
+  background:#ed2929;
+  border-color:#ed2929;
+}
+.section-title{padding:0 16px;font-size:21px}
+#products{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  padding:12px;
+}
+.product{
+  background:#171717;
+  border:1px solid #292929;
+  border-radius:12px;
+  overflow:hidden;
+  min-width:0;
+}
+.photo{
+  position:relative;
+  height:210px;
+  background:#252525;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.photo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.photo-placeholder{font-size:48px}
+.gallery-arrow{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:35px;
+  height:35px;
+  border:0;
+  border-radius:50%;
+  background:rgba(0,0,0,.75);
+  color:white;
+  font-size:23px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:2;
+}
+.gallery-arrow.left{left:7px}
+.gallery-arrow.right{right:7px}
+.gallery-dots{
+  position:absolute;
+  bottom:9px;
+  left:0;
+  right:0;
+  display:flex;
+  justify-content:center;
+  gap:7px;
+  z-index:2;
+}
+.gallery-dot{
+  width:8px;
+  height:8px;
+  border:0;
+  border-radius:50%;
+  background:#777;
+  padding:0;
+  cursor:pointer;
+}
+.gallery-dot.active{background:#ed2929}
+.info{padding:12px}
+.info h3{font-size:16px;margin:0 0 8px}
+.info p{font-size:12px;color:#aaa;min-height:30px;margin:0 0 10px}
+.price{font-size:18px;font-weight:bold;margin-bottom:12px}
 .add{width:100%}
-.modal{display:none;position:fixed;inset:0;background:#000e;z-index:5;overflow:auto;padding:18px}
-.panel{background:#171717;border:1px solid #444;border-radius:14px;padding:18px;max-width:500px;margin:25px auto}
-.panel h2{margin-top:0}
-.close{float:right;background:none;color:white;border:0;font-size:25px}
-.cartitem{border-bottom:1px solid #333;padding:12px 0}
-.qty{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
-.qty button{background:#333;color:white;border:0;border-radius:6px;padding:7px 12px}
-.total{font-size:20px;font-weight:bold;margin:20px 0}
-input,textarea{width:100%;padding:13px;margin:7px 0 14px;background:#242424;border:1px solid #444;border-radius:8px;color:white;font-size:15px}
-.checkout{width:100%;margin-top:10px}
-footer{text-align:center;color:#777;padding:25px}
-.status{color:#aaa;padding:15px;text-align:center;grid-column:1/-1}
-@media(max-width:360px){.products{grid-template-columns:1fr}}
+.empty{
+  color:#999;
+  text-align:center;
+  padding:30px 15px;
+  grid-column:1/-1;
+}
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  z-index:20;
+  padding:18px;
+  overflow-y:auto;
+}
+.modal-content{
+  background:#171717;
+  border:1px solid #333;
+  border-radius:14px;
+  padding:18px;
+  max-width:450px;
+  margin:35px auto;
+}
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.close{
+  background:none;
+  color:white;
+  border:0;
+  font-size:27px;
+  cursor:pointer;
+}
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding:12px 0;
+  border-bottom:1px solid #333;
+}
+.cart-item-name{flex:1;font-size:14px}
+.quantity{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.quantity button{
+  background:#333;
+  color:white;
+  border:0;
+  border-radius:6px;
+  width:27px;
+  height:27px;
+  font-size:17px;
+}
+.remove{
+  background:none;
+  color:#ed2929;
+  border:0;
+  font-size:18px;
+}
+.total{
+  font-size:20px;
+  font-weight:bold;
+  margin:18px 0;
+}
+.checkout{width:100%}
+.field{margin:13px 0}
+.field label{display:block;margin-bottom:7px;color:#bbb;font-size:13px}
+.field input,.field textarea{
+  width:100%;
+  padding:12px;
+  border:1px solid #444;
+  border-radius:8px;
+  background:#090909;
+  color:white;
+  font-size:15px;
+}
+.field textarea{min-height:75px;resize:vertical}
+footer{
+  padding:25px;
+  text-align:center;
+  color:#777;
+  border-top:1px solid #292929;
+  margin-top:25px;
+}
+@media(max-width:360px){
+  #products{gap:8px;padding:8px}
+  .photo{height:175px}
+  .info{padding:9px}
+  .info h3{font-size:14px}
+}
 </style>
 </head>
+
 <body>
 
 <header>
-<div class="logo">PULSE <span>SOUND</span></div>
-<button class="cartbtn" onclick="openCart()">🛒 Корзина <b id="count">0</b></button>
+  <div class="logo">PULSE <span>SOUND</span></div>
+  <button class="cart-button" onclick="openCart()">
+    🛒 Корзина <span id="cart-count">0</span>
+  </button>
 </header>
 
 <section class="hero">
-<small>PREMIUM CAR AUDIO</small>
-<h1>МОЩНОСТЬ<br>НАЧИНАЕТСЯ ЗДЕСЬ.</h1>
-<p>Магазин автозвука Pulse Sound Store</p>
+  <h1>PULSE <span>SOUND</span></h1>
+  <p>Магазин автомобильного звука</p>
 </section>
 
-<section class="section">
-<h2>Каталог товаров</h2>
 <div class="categories">
-<button class="active" onclick="filter('all',this)">Все товары</button>
-<button onclick="filter('sub',this)">Сабвуферы</button>
-<button onclick="filter('amp',this)">Усилители</button>
-<button onclick="filter('speaker',this)">Динамики</button>
-<button onclick="filter('accessory',this)">Аксессуары</button>
-</div>
-<div class="products" id="products">
-<div class="status">Загружаем каталог...</div>
-</div>
-</section>
-
-<div class="modal" id="cartModal">
-<div class="panel">
-<button class="close" onclick="closeCart()">×</button>
-<h2>Твоя корзина</h2>
-<div id="cartItems"></div>
-<div class="total" id="total"></div>
-<button class="checkout" onclick="openOrder()">ОФОРМИТЬ ЗАКАЗ</button>
-</div>
+  <button class="category active" onclick="filterProducts('all',this)">Все товары</button>
+  <button class="category" onclick="filterProducts('sub',this)">Сабвуферы</button>
+  <button class="category" onclick="filterProducts('amp',this)">Усилители</button>
+  <button class="category" onclick="filterProducts('speaker',this)">Динамики</button>
+  <button class="category" onclick="filterProducts('accessory',this)">Аксессуары</button>
 </div>
 
-<div class="modal" id="orderModal">
-<div class="panel">
-<button class="close" onclick="closeOrder()">×</button>
-<h2>Оформление заказа</h2>
-<form id="orderForm">
-<label>Твоё имя</label>
-<input id="customerName" placeholder="Введите имя" required>
-<label>Номер телефона</label>
-<input id="phone" type="tel" placeholder="+7..." required>
-<label>Комментарий к заказу</label>
-<textarea id="comment" rows="3" placeholder="Город, доставка и другие пожелания"></textarea>
-<div id="orderTotal" class="total"></div>
-<button class="checkout" type="submit">ПОДТВЕРДИТЬ ЗАКАЗ</button>
-</form>
-</div>
+<h2 class="section-title">Каталог товаров</h2>
+<div id="products">
+  <div class="empty">Загружаем каталог...</div>
 </div>
 
-<footer>PULSE SOUND STORE © 2026</footer>
+<footer>
+  PULSE SOUND STORE<br>
+  Автозвук без компромиссов
+</footer>
+
+<!-- Корзина -->
+<div class="modal" id="cart-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Корзина</h2>
+      <button class="close" onclick="closeCart()">×</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="total" id="cart-total">Итого: 0 ₽</div>
+    <button class="checkout" onclick="openOrder()">Оформить заказ</button>
+  </div>
+</div>
+
+<!-- Оформление заказа -->
+<div class="modal" id="order-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Оформление</h2>
+      <button class="close" onclick="closeOrder()">×</button>
+    </div>
+    <form id="order-form">
+      <div class="field">
+        <label>Ваше имя</label>
+        <input id="customer-name" required placeholder="Введите имя">
+      </div>
+      <div class="field">
+        <label>Телефон</label>
+        <input id="customer-phone" required type="tel" placeholder="+7...">
+      </div>
+      <div class="field">
+        <label>Комментарий</label>
+        <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
+      </div>
+      <button class="checkout" type="submit">Подтвердить заказ</button>
+    </form>
+  </div>
+</div>
 
 <script>
 const API_URL="https://pwxnijzrywcukatlyllc.supabase.co/functions/v1/products-api";
 
 let items=[];
 let cart=[];
+let currentCategory="all";
+let galleryIndexes={};
 
 const emojis={
   sub:"🔊",
-  amp:"⚡",
-  speaker:"🎵",
-  accessory:"🔧"
+  amp:"🔌",
+  speaker:"🔈",
+  accessory:"🧰"
 };
 
-function money(n){
-  return Number(n).toLocaleString("ru-RU")+" ₽";
+function money(value){
+  return Number(value||0).toLocaleString("ru-RU")+" ₽";
 }
 
 function escapeHTML(value){
-  return String(value??"").replace(/[&<>"']/g,char=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#039;"
-  })[char]);
+  return String(value??"").replace(/[&<>"']/g,function(char){
+    return {
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[char];
+  });
 }
 
 function safeImage(url){
+  if(!url)return "";
   try{
     const parsed=new URL(url);
-    return parsed.protocol==="https:"?parsed.href:"";
-  }catch{
-    return "";
-  }
+    if(parsed.protocol==="https:"||parsed.protocol==="http:"){
+      return parsed.href;
+    }
+  }catch(e){}
+  return "";
 }
 
 async function loadProducts(){
   const box=document.getElementById("products");
-  box.innerHTML='<div class="status">Загружаем каталог...</div>';
-
   try{
     const response=await fetch(API_URL);
-
-    if(!response.ok){
-      throw new Error("Ошибка загрузки: "+response.status);
-    }
-
+    if(!response.ok)throw new Error("Ошибка загрузки");
     const result=await response.json();
 
     if(!Array.isArray(result.products)){
@@ -162,6 +363,7 @@ async function loadProducts(){
       cat:p.category||"accessory",
       desc:p.description||"",
       price:Number(p.price),
+      stock:Number(p.stock||0),
       image:safeImage(p.image_url),
       images:[
         safeImage(p.image_url),
@@ -169,188 +371,221 @@ async function loadProducts(){
         safeImage(p.image_url_3)
       ].filter(Boolean),
       emoji:emojis[p.category]||"🔊"
-    }));
+    })).filter(p=>p.id&&p.name);
 
     render();
-
-    if(items.length===0){
-      box.innerHTML='<div class="status">Пока товаров нет. Скоро каталог пополнится!</div>';
-    }
-
   }catch(error){
     console.error(error);
-    box.innerHTML='<div class="status">Не удалось загрузить каталог. Попробуй обновить страницу.</div>';
+    box.innerHTML='<div class="empty">Не удалось загрузить каталог. Обновите страницу позже.</div>';
   }
 }
 
-function render(list=items){
+function render(list){
   const box=document.getElementById("products");
+  const products=list||(
+    currentCategory==="all"
+      ?items
+      :items.filter(p=>p.cat===currentCategory)
+  );
 
-  box.innerHTML=list.map(p=>{
+  if(!products.length){
+    box.innerHTML='<div class="empty">В этой категории пока нет товаров.</div>';
+    return;
+  }
+
+  box.innerHTML=products.map(p=>{
     const photos=p.images||[];
-    const firstPhoto=photos[0]||"";
+    const index=galleryIndexes[p.id]||0;
+    const photo=photos[index]||"";
 
     return `
       <div class="product">
         <div class="photo">
           ${
-            firstPhoto
+            photo
             ? `
-              <img id="photo-${p.id}" src="${firstPhoto}" alt="${escapeHTML(p.name)}">
+              <img
+                id="photo-${p.id}"
+                src="${photo}"
+                alt="${escapeHTML(p.name)}"
+                onerror="this.style.display='none'"
+              >
               ${
                 photos.length>1
                 ? `
-                  <div class="thumbnails">
+                  <button class="gallery-arrow left"
+                    onclick="changePhoto(${p.id},-1)">‹</button>
+                  <button class="gallery-arrow right"
+                    onclick="changePhoto(${p.id},1)">›</button>
+                  <div class="gallery-dots">
                     ${photos.map((url,i)=>`
-                      <button
-                        id="thumb-${p.id}-${i}"
-                        class="${i===0?"active":""}"
-                        onclick="changePhoto(${p.id},${i})"
-                      >${i+1}</button>
+                      <button class="gallery-dot ${i===index?"active":""}"
+                        onclick="selectPhoto(${p.id},${i})"></button>
                     `).join("")}
                   </div>
                 `
                 :""
               }
             `
-            :p.emoji
+            :`<div class="photo-placeholder">${p.emoji}</div>`
           }
         </div>
-
         <div class="info">
           <h3>${escapeHTML(p.name)}</h3>
           <p>${escapeHTML(p.desc)}</p>
           <div class="price">${money(p.price)}</div>
-          <button class="add" onclick="add(${p.id})">В корзину</button>
+          <button class="add" onclick="addToCart(${p.id})">
+            В корзину
+          </button>
         </div>
       </div>
     `;
   }).join("");
 }
 
-function changePhoto(id,index){
+function changePhoto(id,direction){
+  const product=items.find(p=>p.id===id);
+  if(!product||product.images.length<2)return;
+
+  const current=galleryIndexes[id]||0;
+  galleryIndexes[id]=(
+    current+direction+product.images.length
+  )%product.images.length;
+
+  render();
+}
+
+function selectPhoto(id,index){
   const product=items.find(p=>p.id===id);
   if(!product||!product.images[index])return;
+  galleryIndexes[id]=index;
+  render();
+}
 
-  const photo=document.getElementById("photo-"+id);
-  if(photo){
-    photo.src=product.images[index];
-  }
-
-  product.images.forEach((url,i)=>{
-    const button=document.getElementById("thumb-"+id+"-"+i);
-    if(button){
-      button.classList.toggle("active",i===index);
-    }
+function filterProducts(category,button){
+  currentCategory=category;
+  document.querySelectorAll(".category").forEach(b=>{
+    b.classList.remove("active");
   });
+  button.classList.add("active");
+  render();
 }
 
-function filter(cat,btn){
-  document.querySelectorAll(".categories button")
-    .forEach(b=>b.classList.remove("active"));
-
-  btn.classList.add("active");
-
-  render(cat==="all"
-    ?items
-    :items.filter(p=>p.cat===cat)
-  );
-}
-
-function add(id){
+function addToCart(id){
   const product=items.find(p=>p.id===id);
   if(!product)return;
 
-  let found=cart.find(p=>p.id===id);
+  const existing=cart.find(p=>p.id===id);
+  if(existing){
+    if(existing.qty>=product.stock){
+      alert("Больше товаров нет в наличии");
+      return;
+    }
+    existing.qty++;
+  }else{
+    if(product.stock<1){
+      alert("Товара сейчас нет в наличии");
+      return;
+    }
+    cart.push({...product,qty:1});
+  }
 
-  if(found)found.qty++;
-  else cart.push({...product,qty:1});
-
-  updateCount();
+  updateCart();
 }
 
-function updateCount(){
-  document.getElementById("count").textContent=
-    cart.reduce((s,p)=>s+p.qty,0);
-}
+function updateCart(){
+  const count=cart.reduce((sum,p)=>sum+p.qty,0);
+  document.getElementById("cart-count").textContent=count;
 
-function openCart(){
-  document.getElementById("cartModal").style.display="block";
-  renderCart();
-}
-
-function closeCart(){
-  document.getElementById("cartModal").style.display="none";
-}
-
-function renderCart(){
-  let box=document.getElementById("cartItems");
+  const container=document.getElementById("cart-items");
 
   if(!cart.length){
-    box.innerHTML="<p>Корзина пока пуста.</p>";
-    document.getElementById("total").textContent="";
+    container.innerHTML='<div class="empty">Корзина пока пустая</div>';
+  }else{
+    container.innerHTML=cart.map(p=>`
+      <div class="cart-item">
+        <div class="cart-item-name">
+          ${escapeHTML(p.name)}<br>
+          <small>${money(p.price)}</small>
+        </div>
+        <div class="quantity">
+          <button onclick="changeQuantity(${p.id},-1)">−</button>
+          <span>${p.qty}</span>
+          <button onclick="changeQuantity(${p.id},1)">+</button>
+        </div>
+        <button class="remove" onclick="removeFromCart(${p.id})">×</button>
+      </div>
+    `).join("");
+  }
+
+  const total=cart.reduce((sum,p)=>sum+p.price*p.qty,0);
+  document.getElementById("cart-total").textContent="Итого: "+money(total);
+}
+
+function changeQuantity(id,change){
+  const product=cart.find(p=>p.id===id);
+  if(!product)return;
+
+  const catalogProduct=items.find(p=>p.id===id);
+  const next=product.qty+change;
+
+  if(next<=0){
+    removeFromCart(id);
     return;
   }
 
-  box.innerHTML=cart.map(p=>`
-    <div class="cartitem">
-      <b>${escapeHTML(p.name)}</b><br>${money(p.price)}
-      <div class="qty">
-        <button onclick="changeQty(${p.id},-1)">−</button>
-        ${p.qty}
-        <button onclick="changeQty(${p.id},1)">+</button>
-        <button onclick="removeItem(${p.id})">Удалить</button>
-      </div>
-    </div>
-  `).join("");
-
-  let sum=cart.reduce((s,p)=>s+p.price*p.qty,0);
-  document.getElementById("total").textContent="Итого: "+money(sum);
-}
-
-function changeQty(id,n){
-  let p=cart.find(p=>p.id===id);
-  if(!p)return;
-
-  p.qty+=n;
-
-  if(p.qty<=0)removeItem(id);
-  else{
-    updateCount();
-    renderCart();
+  if(catalogProduct&&next>catalogProduct.stock){
+    alert("Больше товаров нет в наличии");
+    return;
   }
+
+  product.qty=next;
+  updateCart();
 }
 
-function removeItem(id){
+function removeFromCart(id){
   cart=cart.filter(p=>p.id!==id);
-  updateCount();
-  renderCart();
+  updateCart();
+}
+
+function openCart(){
+  updateCart();
+  document.getElementById("cart-modal").style.display="block";
+}
+
+function closeCart(){
+  document.getElementById("cart-modal").style.display="none";
 }
 
 function openOrder(){
   if(!cart.length){
-    alert("Сначала добавь товары в корзину");
+    alert("Корзина пустая");
     return;
   }
-
   closeCart();
-
-  document.getElementById("orderTotal").textContent=
-    "К оплате: "+money(cart.reduce((s,p)=>s+p.price*p.qty,0));
-
-  document.getElementById("orderModal").style.display="block";
+  document.getElementById("order-modal").style.display="block";
 }
 
 function closeOrder(){
-  document.getElementById("orderModal").style.display="none";
+  document.getElementById("order-modal").style.display="none";
 }
 
-document.getElementById("orderForm").addEventListener("submit",function(e){
+document.getElementById("order-form").addEventListener("submit",function(e){
   e.preventDefault();
+
   alert("Каталог подключён. Отправка заказов будет подключена следующим этапом.");
+
+  closeOrder();
+});
+
+window.addEventListener("click",function(e){
+  if(e.target.id==="cart-modal")closeCart();
+  if(e.target.id==="order-modal")closeOrder();
 });
 
 loadProducts();
+updateCart();
 </script>
+
 </body>
 </html>
