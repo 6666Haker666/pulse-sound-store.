@@ -154,14 +154,19 @@ async function loadProducts(){
     }
 
     items = result.products.map(p=>({
-      id:Number(p.id),
-      name:p.name,
-      cat:p.category || "accessory",
-      desc:p.description || "",
-      price:Number(p.price),
-      image:safeImage(p.image_url),
-      emoji:emojis[p.category] || "🔊"
-    }));
+  id:Number(p.id),
+  name:p.name,
+  cat:p.category || "accessory",
+  desc:p.description || "",
+  price:Number(p.price),
+  image:safeImage(p.image_url),
+  images:[
+    safeImage(p.image_url),
+    safeImage(p.image_url_2),
+    safeImage(p.image_url_3)
+  ].filter(Boolean),
+  emoji:emojis[p.category] || "🔊"
+}));
 
     render();
 
