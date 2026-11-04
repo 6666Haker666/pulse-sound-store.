@@ -148,6 +148,39 @@ footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;ma
       <button class="close" onclick="closeOrder()">×</button>
     </div>
     <form id="order-form">
+
+  <div class="field">
+    <label>Ваше имя</label>
+    <input id="customer-name" required placeholder="Введите имя">
+  </div>
+
+  <div class="field">
+    <label>Телефон</label>
+    <input id="customer-phone" required type="tel" placeholder="+7...">
+  </div>
+
+  <div class="field">
+    <label>Способ доставки</label>
+    <select id="delivery-method" required
+      style="width:100%;padding:12px;background:#090909;color:white;border:1px solid #444;border-radius:8px">
+      <option value="local">Доставка по городу — 300 ₽</option>
+      <option value="other">Другой город — стоимость уточним</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Адрес доставки</label>
+    <input id="delivery-address" placeholder="Улица, дом, квартира">
+  </div>
+
+  <div class="field">
+    <label>Комментарий</label>
+    <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
+  </div>
+
+  <button class="checkout" type="submit">Подтвердить заказ</button>
+
+</form>
       <div class="field">
         <label>Ваше имя</label>
         <input id="customer-name" required placeholder="Введите имя">
@@ -468,11 +501,19 @@ function closeOrder(){
   document.getElementById("order-modal").style.display="none";
 }
 
-document.getElementById("order-form").addEventListener("submit",function(e){
-  e.preventDefault();
-  alert("Каталог подключён. Отправка заказов будет подключена следующим этапом.");
-  closeOrder();
-});
+const deliveryMethod = document.getElementById("delivery-method"); const deliveryAddress = document.getElementById("delivery-address");
+const orderSummary = document.createElement("div"); orderSummary.id = "order-summary"; orderSummary.className = "detail-section"; deliveryAddress.parentElement.after(orderSummary);
+deliveryAddress.required = true;
+function calculateOrder(){ const subtotal = cart.reduce((sum,p)=>sum+p.price*p.qty,0); const method = deliveryMethod.value;
+let delivery = 0; let total = subtotal; let deliveryText = "";
+if(method === "local"){ delivery = 300; total += delivery; deliveryText = "300 ₽"; }else{ deliveryText = "Уточняется"; }
+orderSummary.innerHTML = <h3>Ваш заказ</h3> <div class="spec-row"> <span class="spec-name">Товары</span> <span>${money(subtotal)}</span> </div> <div class="spec-row"> <span class="spec-name">Доставка</span> <span>${deliveryText}</span> </div> <div class="spec-row"> <strong>Итого</strong> <strong>￼{method==="other"?" + доставка":""}</strong> </div>; }
+deliveryMethod.addEventListener("change",calculateOrder);
+ calculateOrder();
+const oldOrderForm = document.getElementById("order-form");
+oldOrderForm.addEventListener("submit",function(e){ e.preventDefault();
+calculateOrder();
+alert("Расчёт готов. Отправка заказов в Telegram будет подключена следующим этапом."); });
 
 window.addEventListener("click",function(e){
   if(e.target.id==="cart-modal")closeCart();
