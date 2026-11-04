@@ -13,7 +13,7 @@ header{padding:18px;display:flex;justify-content:space-between;align-items:cente
 .logo{font-size:22px;font-weight:bold}
 .logo span,.hero h1 span{color:#ed2929}
 button{cursor:pointer}
-button:disabled{opacity:.5;cursor:not-allowed}
+button:disabled{opacity:1;cursor:not-allowed}
 .cart-button,.add,.checkout{background:#ed2929;color:white;border:0;border-radius:9px;padding:11px 15px;font-weight:bold}
 .hero{padding:35px 20px;text-align:center;background:linear-gradient(135deg,#191919,#080808)}
 .hero h1{font-size:30px;margin:0 0 10px}
@@ -25,7 +25,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 #products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px}
 .product{background:#171717;border:1px solid #292929;border-radius:12px;overflow:hidden;min-width:0;cursor:pointer}
 .photo{position:relative;height:210px;background:#252525;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.photo img{width:100%;height:100%;object-fit:contain}
+.photo img{width:100%;height:100%;object-fit:contain;cursor:zoom-in}
 .photo-placeholder{font-size:48px}
 .gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:50%;background:rgba(0,0,0,.75);color:white;font-size:25px;display:flex;align-items:center;justify-content:center;z-index:2}
 .gallery-arrow.left{left:7px}
@@ -38,6 +38,27 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .info p{font-size:12px;color:#aaa;min-height:30px;margin:0 0 10px}
 .price{font-size:18px;font-weight:bold;margin-bottom:12px}
 .add{width:100%}
+
+/* Красное свечение кнопки "Нет в наличии" */
+.add.out-of-stock{
+  background:#260909;
+  color:#ff4545;
+  border:1px solid #ff2929;
+  text-shadow:0 0 5px #ff2222,0 0 12px rgba(255,35,35,.9);
+  box-shadow:0 0 7px rgba(255,25,25,.65),inset 0 0 12px rgba(255,25,25,.2);
+  animation:redGlow 1.8s ease-in-out infinite alternate;
+}
+@keyframes redGlow{
+  from{
+    box-shadow:0 0 5px rgba(255,25,25,.45),inset 0 0 8px rgba(255,25,25,.12);
+    text-shadow:0 0 5px rgba(255,35,35,.7);
+  }
+  to{
+    box-shadow:0 0 13px rgba(255,25,25,.9),0 0 22px rgba(255,25,25,.35),inset 0 0 13px rgba(255,25,25,.25);
+    text-shadow:0 0 7px #ff2222,0 0 15px rgba(255,35,35,.9);
+  }
+}
+
 .empty{color:#999;text-align:center;padding:30px 15px;grid-column:1/-1}
 .error-text{color:#ff7777}
 
@@ -49,7 +70,16 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .detail-photo .gallery-dots{bottom:13px}
 .detail-title{font-size:25px;margin:20px 0 10px}
 .detail-price{font-size:27px;font-weight:bold;margin:15px 0}
-.stock{color:#8edb91;font-size:14px;margin:10px 0}
+.stock{font-size:14px;margin:10px 0;font-weight:bold}
+.stock.available{
+  color:#8edb91;
+  text-shadow:0 0 6px rgba(80,255,100,.65),0 0 13px rgba(80,255,100,.35);
+}
+.stock.unavailable{
+  color:#ff4545;
+  text-shadow:0 0 6px #ff2222,0 0 13px rgba(255,35,35,.8),0 0 22px rgba(255,35,35,.5);
+  animation:redGlow 1.8s ease-in-out infinite alternate;
+}
 .detail-section{background:#171717;border:1px solid #292929;border-radius:12px;padding:15px;margin-top:15px}
 .detail-section h3{margin:0 0 12px;font-size:17px}
 .detail-description{color:#ccc;line-height:1.5;white-space:pre-wrap}
@@ -59,8 +89,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .spec-value{text-align:right;overflow-wrap:anywhere}
 .detail-add{width:100%;padding:15px;font-size:16px;margin-top:18px}
 #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:50;align-items:center;justify-content:center}
-#lightbox img{max-width:96%;max-height:85%;object-fit:contain}
-#lightbox-close{position:absolute;right:20px;top:20px;background:#333;color:white;border:0;border-radius:50%;width:42px;height:42px;font-size:25px}
+#lightbox img{max-width:96%;max-height:85%;object-fit:contain;cursor:zoom-out}
+#lightbox-close{position:absolute;right:20px;top:20px;background:#333;color:white;border:0;border-radius:50%;width:42px;height:42px;font-size:25px;z-index:2}
 
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:30;padding:18px;overflow-y:auto}
 .modal-content{background:#171717;border:1px solid #333;border-radius:14px;padding:18px;max-width:450px;margin:35px auto}
@@ -125,7 +155,7 @@ footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;ma
 
 <div id="lightbox" onclick="closeLightbox()">
   <button id="lightbox-close" onclick="closeLightbox()">×</button>
-  <img id="lightbox-image" src="" alt="Фото товара">
+  <img id="lightbox-image" src="" alt="Фото товара" onclick="event.stopPropagation()">
 </div>
 
 <div class="modal" id="cart-modal">
@@ -152,12 +182,10 @@ footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;ma
         <label for="customer-name">Ваше имя</label>
         <input id="customer-name" required placeholder="Введите имя">
       </div>
-
       <div class="field">
         <label for="customer-phone">Телефон</label>
         <input id="customer-phone" required type="tel" placeholder="+7...">
       </div>
-
       <div class="field">
         <label for="delivery-method">Способ доставки</label>
         <select id="delivery-method" required>
@@ -165,25 +193,19 @@ footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;ma
           <option value="other">Доставка в другой город — стоимость уточним</option>
         </select>
       </div>
-
       <div class="field">
         <label for="delivery-address">Адрес доставки</label>
         <input id="delivery-address" required placeholder="Город, улица, дом, квартира">
       </div>
-
       <div class="field">
         <label for="customer-comment">Комментарий</label>
         <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
       </div>
-
       <div class="order-summary" id="order-summary">
         <h3>Ваш заказ</h3>
       </div>
-
       <button class="checkout" type="submit">Подтвердить заказ</button>
-      <p class="delivery-note">
-        При доставке в другой город стоимость будет согласована отдельно.
-      </p>
+      <p class="delivery-note">При доставке в другой город стоимость будет согласована отдельно.</p>
     </form>
   </div>
 </div>
@@ -233,17 +255,12 @@ async function loadProducts(){
 
   try{
     const response=await fetch(API_URL);
-
-    if(!response.ok){
-      throw new Error("Supabase ответил с ошибкой: "+response.status);
-    }
+    if(!response.ok)throw new Error("Supabase ответил с ошибкой: "+response.status);
 
     const result=await response.json();
     const productList=Array.isArray(result)?result:result.products;
 
-    if(!Array.isArray(productList)){
-      throw new Error("API вернул данные в неизвестном формате");
-    }
+    if(!Array.isArray(productList))throw new Error("API вернул данные в неизвестном формате");
 
     items=productList.map(p=>({
       id:Number(p.id),
@@ -257,7 +274,6 @@ async function loadProducts(){
       emoji:emojis[p.category]||"🔊"
     })).filter(p=>p.id&&p.name);
 
-    // Обновляем информацию о товарах, уже находящихся в корзине
     cart=cart.map(old=>{
       const fresh=items.find(p=>p.id===old.id);
       return fresh?{...fresh,qty:old.qty}:old;
@@ -266,21 +282,18 @@ async function loadProducts(){
     render();
     updateCart();
 
+    if(detailProductId!==null)renderProductDetail();
+
   }catch(error){
     console.error("Ошибка загрузки каталога:",error);
     box.innerHTML='<div class="empty error-text">Не удалось загрузить каталог. Обновите страницу позже.</div>';
   }
 }
 
-/* Отрисовка товаров */
+/* Отрисовка каталога */
 function render(list){
   const box=document.getElementById("products");
-
-  const products=list||(
-    currentCategory==="all"
-      ?items
-      :items.filter(p=>p.cat===currentCategory)
-  );
+  const products=list||(currentCategory==="all"?items:items.filter(p=>p.cat===currentCategory));
 
   if(!products.length){
     box.innerHTML='<div class="empty">В этой категории пока нет товаров.</div>';
@@ -291,12 +304,14 @@ function render(list){
     const photos=p.images||[];
     const index=galleryIndexes[p.id]||0;
     const photo=photos[index]||"";
+    const inStock=p.stock>0;
 
     return `
       <div class="product" onclick="openProduct(${p.id})">
         <div class="photo">
           ${photo?`
-            <img src="${escapeHTML(photo)}" alt="${escapeHTML(p.name)}">
+            <img src="${escapeHTML(photo)}" alt="${escapeHTML(p.name)}"
+              onclick="event.stopPropagation();openProduct(${p.id})">
             ${photos.length>1?`
               <button class="gallery-arrow left" onclick="event.stopPropagation();changeCardPhoto(${p.id},-1)">‹</button>
               <button class="gallery-arrow right" onclick="event.stopPropagation();changeCardPhoto(${p.id},1)">›</button>
@@ -312,8 +327,9 @@ function render(list){
           <h3>${escapeHTML(p.name)}</h3>
           <p>${escapeHTML(p.desc)}</p>
           <div class="price">${money(p.price)}</div>
-          <button class="add" ${p.stock<1?"disabled":""} onclick="event.stopPropagation();addToCart(${p.id})">
-            ${p.stock>0?"В корзину":"Нет в наличии"}
+          <button class="add ${inStock?"":"out-of-stock"}" ${inStock?"":"disabled"}
+            onclick="event.stopPropagation();addToCart(${p.id})">
+            ${inStock?"В корзину":"Нет в наличии"}
           </button>
         </div>
       </div>
@@ -370,6 +386,7 @@ function renderProductDetail(){
 
   const photos=p.images||[];
   const photo=photos[detailPhotoIndex]||"";
+  const inStock=p.stock>0;
 
   let specsHTML="";
 
@@ -391,7 +408,8 @@ function renderProductDetail(){
   document.getElementById("product-detail").innerHTML=`
     <div class="detail-photo">
       ${photo?`
-        <img src="${escapeHTML(photo)}" alt="${escapeHTML(p.name)}" onclick="openLightbox(${JSON.stringify(photo).replace(/</g,"\\u003c")})">
+        <img src="${escapeHTML(photo)}" alt="${escapeHTML(p.name)}"
+          onclick="openLightbox(${JSON.stringify(photo).replace(/</g,"\\u003c")})">
         ${photos.length>1?`
           <button class="gallery-arrow left" onclick="changeDetailPhoto(-1)">‹</button>
           <button class="gallery-arrow right" onclick="changeDetailPhoto(1)">›</button>
@@ -406,7 +424,9 @@ function renderProductDetail(){
 
     <h1 class="detail-title">${escapeHTML(p.name)}</h1>
     <div class="detail-price">${money(p.price)}</div>
-    <div class="stock">${p.stock>0?"✓ В наличии: "+p.stock+" шт.":"Нет в наличии"}</div>
+    <div class="stock ${inStock?"available":"unavailable"}">
+      ${inStock?"✓ В наличии: "+p.stock+" шт.":"✕ Нет в наличии"}
+    </div>
 
     <div class="detail-section">
       <h3>Описание товара</h3>
@@ -418,8 +438,9 @@ function renderProductDetail(){
       ${specsHTML||'<div class="detail-description">Характеристики этого товара пока не заполнены.</div>'}
     </div>
 
-    <button class="add detail-add" onclick="addToCart(${p.id})" ${p.stock<1?"disabled":""}>
-      ${p.stock>0?"Добавить в корзину":"Нет в наличии"}
+    <button class="add detail-add ${inStock?"":"out-of-stock"}"
+      onclick="addToCart(${p.id})" ${inStock?"":"disabled"}>
+      ${inStock?"Добавить в корзину":"Нет в наличии"}
     </button>
   `;
 }
@@ -439,6 +460,7 @@ function selectDetailPhoto(index){
 }
 
 function openLightbox(url){
+  if(!url)return;
   document.getElementById("lightbox-image").src=url;
   document.getElementById("lightbox").style.display="flex";
 }
@@ -473,8 +495,7 @@ function addToCart(id){
 }
 
 function updateCart(){
-  document.getElementById("cart-count").textContent=
-    cart.reduce((s,p)=>s+p.qty,0);
+  document.getElementById("cart-count").textContent=cart.reduce((s,p)=>s+p.qty,0);
 
   const container=document.getElementById("cart-items");
 
@@ -499,7 +520,6 @@ function updateCart(){
 
   const total=cart.reduce((s,p)=>s+p.price*p.qty,0);
   document.getElementById("cart-total").textContent="Итого: "+money(total);
-
   calculateOrder();
 }
 
@@ -557,7 +577,6 @@ function closeOrder(){
 function calculateOrder(){
   const summary=document.getElementById("order-summary");
   const method=document.getElementById("delivery-method");
-
   if(!summary||!method)return;
 
   const subtotal=cart.reduce((sum,p)=>sum+p.price*p.qty,0);
@@ -604,10 +623,8 @@ document.getElementById("order-form").addEventListener("submit",async function(e
     return;
   }
 
-  // Проверяем остатки по последним загруженным данным
   for(const cartItem of cart){
     const product=items.find(p=>p.id===cartItem.id);
-
     if(!product||product.stock<cartItem.qty){
       alert("Недостаточно товара: "+cartItem.name+". Обновите каталог.");
       await loadProducts();
@@ -617,15 +634,12 @@ document.getElementById("order-form").addEventListener("submit",async function(e
 
   const delivery=method==="local"?300:0;
 
-  // ВАЖНО: передаём ID товара, а не доверяем цене из браузера.
   const order={
     name,
     phone,
     address,
     comment,
-    deliveryMethod:method==="local"
-      ?"Доставка по городу"
-      :"Доставка в другой город",
+    deliveryMethod:method==="local"?"Доставка по городу":"Доставка в другой город",
     delivery,
     items:cart.map(p=>({
       product_id:p.id,
@@ -640,9 +654,7 @@ document.getElementById("order-form").addEventListener("submit",async function(e
   try{
     const response=await fetch(ORDER_URL,{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify(order)
     });
 
@@ -656,22 +668,16 @@ document.getElementById("order-form").addEventListener("submit",async function(e
     }
 
     if(!response.ok||!result.success){
-      throw new Error(
-        result.error||
-        "Не удалось отправить заказ. Код: "+response.status
-      );
+      throw new Error(result.error||"Не удалось отправить заказ. Код: "+response.status);
     }
 
-    alert("Заказ №"+(result.order_id||"")+
-      " успешно оформлен! Скоро с вами свяжутся.");
+    alert("Заказ №"+(result.order_id||"")+" успешно оформлен! Скоро с вами свяжутся.");
 
     cart=[];
     updateCart();
     this.reset();
     calculateOrder();
     closeOrder();
-
-    // Получаем новые остатки после списания
     await loadProducts();
 
   }catch(error){
