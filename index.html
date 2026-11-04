@@ -533,7 +533,7 @@ function calculateOrder(){
 document.getElementById("delivery-method").addEventListener("change",calculateOrder);
 
 /* Подтверждение заполненной заявки */
-document.getElementById("order-form").addEventListener("submit", async function(e){ e.preventDefault();
+document.getElementById("order-form").addEventListener("submit", async function(e){
 if(!cart.length){ alert("Корзина пустая"); return; }
 const name=document.getElementById("customer-name").value.trim(); const phone=document.getElementById("customer-phone").value.trim(); const address=document.getElementById("delivery-address").value.trim(); const comment=document.getElementById("customer-comment").value.trim(); const method=document.getElementById("delivery-method").value;
 if(!name||!phone||!address){ alert("Заполните имя, телефон и адрес доставки."); return; }
