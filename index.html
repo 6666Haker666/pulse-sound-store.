@@ -39,7 +39,6 @@ button:disabled{opacity:1;cursor:not-allowed}
 .price{font-size:18px;font-weight:bold;margin-bottom:12px}
 .add{width:100%}
 
-/* Красное свечение кнопки "Нет в наличии" */
 .add.out-of-stock{
   background:#260909;
   color:#ff4545;
@@ -88,9 +87,42 @@ button:disabled{opacity:1;cursor:not-allowed}
 .spec-name{color:#999}
 .spec-value{text-align:right;overflow-wrap:anywhere}
 .detail-add{width:100%;padding:15px;font-size:16px;margin-top:18px}
-#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:50;align-items:center;justify-content:center}
-#lightbox img{max-width:96%;max-height:85%;object-fit:contain;cursor:zoom-out}
-#lightbox-close{position:absolute;right:20px;top:20px;background:#333;color:white;border:0;border-radius:50%;width:42px;height:42px;font-size:25px;z-index:2}
+
+/* Увеличенное фото товара */
+#lightbox{
+  display:none;
+  position:fixed;
+  inset:0;
+  padding:25px;
+  background:rgba(0,0,0,.88);
+  z-index:50;
+  align-items:center;
+  justify-content:center;
+}
+#lightbox img{
+  display:block;
+  width:min(88vw,900px);
+  height:min(82vh,800px);
+  object-fit:contain;
+  background:#171717;
+  border:1px solid #444;
+  border-radius:14px;
+  padding:8px;
+  cursor:zoom-out;
+}
+#lightbox-close{
+  position:absolute;
+  right:18px;
+  top:18px;
+  background:#333;
+  color:white;
+  border:1px solid #555;
+  border-radius:50%;
+  width:42px;
+  height:42px;
+  font-size:25px;
+  z-index:2;
+}
 
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:30;padding:18px;overflow-y:auto}
 .modal-content{background:#171717;border:1px solid #333;border-radius:14px;padding:18px;max-width:450px;margin:35px auto}
@@ -119,6 +151,8 @@ footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;ma
 .info{padding:9px}
 .info h3{font-size:14px}
 .detail-photo{height:280px}
+#lightbox{padding:15px}
+#lightbox img{width:92vw;height:78vh}
 }
 </style>
 </head>
@@ -409,7 +443,7 @@ function renderProductDetail(){
     <div class="detail-photo">
       ${photo?`
         <img src="${escapeHTML(photo)}" alt="${escapeHTML(p.name)}"
-          onclick="openLightbox(${JSON.stringify(photo).replace(/</g,"\\u003c")})">
+          onclick="openLightbox(this.src)">
         ${photos.length>1?`
           <button class="gallery-arrow left" onclick="changeDetailPhoto(-1)">‹</button>
           <button class="gallery-arrow right" onclick="changeDetailPhoto(1)">›</button>
@@ -459,15 +493,25 @@ function selectDetailPhoto(index){
   renderProductDetail();
 }
 
+/* Открытие увеличенной фотографии */
 function openLightbox(url){
   if(!url)return;
-  document.getElementById("lightbox-image").src=url;
-  document.getElementById("lightbox").style.display="flex";
+
+  const lightbox=document.getElementById("lightbox");
+  const image=document.getElementById("lightbox-image");
+
+  image.src=url;
+  lightbox.style.display="flex";
+  document.body.style.overflow="hidden";
 }
 
 function closeLightbox(){
-  document.getElementById("lightbox").style.display="none";
-  document.getElementById("lightbox-image").src="";
+  const lightbox=document.getElementById("lightbox");
+  const image=document.getElementById("lightbox-image");
+
+  lightbox.style.display="none";
+  image.src="";
+  document.body.style.overflow="";
 }
 
 /* Корзина */
