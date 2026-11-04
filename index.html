@@ -532,6 +532,82 @@ function calculateOrder(){
 
 document.getElementById("delivery-method").addEventListener("change",calculateOrder);
 
+ /* Отправка заказа в Telegram */
+document.getElementById("order-form").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  if(!cart.length){
+    alert("Корзина пустая");
+    return;
+  }
+
+  const name=document.getElementById("customer-name").value.trim();
+  const phone=document.getElementById("customer-phone").value.trim();
+  const address=document.getElementById("delivery-address").value.trim();
+  const comment=document.getElementById("customer-comment").value.trim();
+  const method=document.getElementById("delivery-method").value;
+
+  if(!name||!phone||!address){
+    alert("Заполните имя, телефон и адрес доставки.");
+    return;
+  }
+
+  const subtotal=cart.reduce((sum,p)=>sum+p.price*p.qty,0);
+  const delivery=method==="local"?300:0;
+  const total=subtotal+delivery;
+
+  const order={
+    name,
+    phone,
+    address,
+    comment,
+    deliveryMethod:method==="local"?"Доставка по городу":"Доставка в другой город",
+    subtotal,
+    delivery,
+    total,
+    items:cart.map(p=>({
+      name:p.name,
+      quantity:p.qty,
+      price:p.price
+    }))
+  };
+
+  const submitButton=this.querySelector('button[type="submit"]');
+  submitButton.disabled=true;
+  submitButton.textContent="Отправляем заказ...";
+
+  try{
+    const response=await fetch(
+      "https://pwxnijzrywcukatlyllc.supabase.co/functions/v1/telegram-order",
+      {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(order)
+      }
+    );
+
+    const result=await response.json();
+
+    if(!response.ok||!result.success){
+      throw new Error(result.error||"Ошибка отправки");
+    }
+
+    alert("Заказ успешно отправлен!");
+
+    cart=[];
+    updateCart();
+    this.reset();
+    calculateOrder();
+    closeOrder();
+
+  }catch(error){
+    console.error(error);
+    alert("Не удалось отправить заказ. Попробуйте ещё раз.");
+  }finally{
+    submitButton.disabled=false;
+    submitButton.textContent="Подтвердить заказ";
+  }
+});
 document.getElementById("order-form").addEventListener("submit", async function(e){
 if(!cart.length){ alert("Корзина пустая"); return; }
 const name=document.getElementById("customer-name").value.trim(); const phone=document.getElementById("customer-phone").value.trim(); const address=document.getElementById("delivery-address").value.trim(); const comment=document.getElementById("customer-comment").value.trim(); const method=document.getElementById("delivery-method").value;
