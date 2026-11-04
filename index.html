@@ -76,8 +76,13 @@ button{cursor:pointer}
 .checkout{width:100%}
 .field{margin:13px 0}
 .field label{display:block;margin-bottom:7px;color:#bbb;font-size:13px}
-.field input,.field textarea{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:white;font-size:15px}
+.field input,.field textarea,.field select{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:white;font-size:15px}
 .field textarea{min-height:75px;resize:vertical}
+.order-summary{background:#101010;border:1px solid #333;border-radius:10px;padding:13px;margin:16px 0}
+.order-summary h3{margin:0 0 10px;font-size:16px}
+.order-summary .spec-row{font-size:14px}
+.order-total{font-size:18px;font-weight:bold;color:#ed2929}
+.delivery-note{font-size:12px;color:#999;line-height:1.5;margin-top:10px}
 footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;margin-top:25px}
 
 @media(max-width:360px){
@@ -147,20 +152,45 @@ footer{padding:25px;text-align:center;color:#777;border-top:1px solid #292929;ma
       <h2>Оформление</h2>
       <button class="close" onclick="closeOrder()">×</button>
     </div>
+
     <form id="order-form">
       <div class="field">
-        <label>Ваше имя</label>
+        <label for="customer-name">Ваше имя</label>
         <input id="customer-name" required placeholder="Введите имя">
       </div>
+
       <div class="field">
-        <label>Телефон</label>
+        <label for="customer-phone">Телефон</label>
         <input id="customer-phone" required type="tel" placeholder="+7...">
       </div>
+
       <div class="field">
-        <label>Комментарий</label>
+        <label for="delivery-method">Способ доставки</label>
+        <select id="delivery-method" required>
+          <option value="local">Доставка по городу — 300 ₽</option>
+          <option value="other">Доставка в другой город — стоимость уточним</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="delivery-address">Адрес доставки</label>
+        <input id="delivery-address" required placeholder="Город, улица, дом, квартира">
+      </div>
+
+      <div class="field">
+        <label for="customer-comment">Комментарий</label>
         <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
       </div>
+
+      <div class="order-summary" id="order-summary">
+        <h3>Ваш заказ</h3>
+      </div>
+
       <button class="checkout" type="submit">Подтвердить заказ</button>
+      <p class="delivery-note">
+        При доставке в другой город стоимость будет согласована отдельно.
+        Подтверждение на этой странице пока не отправляет заказ продавцу.
+      </p>
     </form>
   </div>
 </div>
@@ -434,6 +464,8 @@ function updateCart(){
 
   const total=cart.reduce((s,p)=>s+p.price*p.qty,0);
   document.getElementById("cart-total").textContent="Итого: "+money(total);
+
+  calculateOrder();
 }
 
 function changeQuantity(id,change){
@@ -463,15 +495,86 @@ function openOrder(){
   if(!cart.length){alert("Корзина пустая");return;}
   closeCart();
   document.getElementById("order-modal").style.display="block";
+  calculateOrder();
 }
 function closeOrder(){
   document.getElementById("order-modal").style.display="none";
 }
 
+/* Расчёт стоимости доставки и заказа */
+function calculateOrder(){
+  const summary=document.getElementById("order-summary");
+  const method=document.getElementById("delivery-method");
+
+  if(!summary||!method)return;
+
+  const subtotal=cart.reduce((sum,p)=>sum+p.price*p.qty,0);
+  const local=method.value==="local";
+  const delivery=local?300:0;
+  const total=subtotal+delivery;
+
+  summary.innerHTML=`
+    <h3>Ваш заказ</h3>
+    <div class="spec-row">
+      <span class="spec-name">Товары</span>
+      <strong>${money(subtotal)}</strong>
+    </div>
+    <div class="spec-row">
+      <span class="spec-name">Доставка</span>
+      <strong>${local?"300 ₽":"Уточняется"}</strong>
+    </div>
+    <div class="spec-row">
+      <span>Итого</span>
+      <strong class="order-total">${money(total)}${local?"":" + доставка"}</strong>
+    </div>
+  `;
+}
+
+document.getElementById("delivery-method").addEventListener("change",calculateOrder);
+
+/* Подтверждение заполненной заявки */
 document.getElementById("order-form").addEventListener("submit",function(e){
   e.preventDefault();
-  alert("Каталог подключён. Отправка заказов будет подключена следующим этапом.");
-  closeOrder();
+
+  if(!cart.length){
+    alert("Корзина пустая");
+    return;
+  }
+
+  const name=document.getElementById("customer-name").value.trim();
+  const phone=document.getElementById("customer-phone").value.trim();
+  const address=document.getElementById("delivery-address").value.trim();
+  const comment=document.getElementById("customer-comment").value.trim();
+  const method=document.getElementById("delivery-method").value;
+
+  if(!name||!phone||!address){
+    alert("Заполните имя, телефон и адрес доставки.");
+    return;
+  }
+
+  const subtotal=cart.reduce((sum,p)=>sum+p.price*p.qty,0);
+  const local=method==="local";
+  const delivery=local?300:0;
+  const total=subtotal+delivery;
+
+  const orderItems=cart.map(p=>
+    p.name+" × "+p.qty+" — "+money(p.price*p.qty)
+  ).join("\n");
+
+  const message=
+    "Заявка заполнена!\n\n"+
+    orderItems+
+    "\n\nТовары: "+money(subtotal)+
+    "\nДоставка: "+(local?"300 ₽":"Уточняется")+
+    "\nИтого: "+money(total)+(local?"":" + доставка")+
+    "\n\nИмя: "+name+
+    "\nТелефон: "+phone+
+    "\nСпособ доставки: "+(local?"По городу":"Другой город")+
+    "\nАдрес: "+address+
+    "\nКомментарий: "+(comment||"Нет")+
+    "\n\nЭто подтверждение заполнения формы. Заказ пока не отправлен продавцу.";
+
+  alert(message);
 });
 
 window.addEventListener("click",function(e){
