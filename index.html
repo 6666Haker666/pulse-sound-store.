@@ -312,6 +312,28 @@ footer span{color:var(--red);font-weight:bold}
   width:75px;height:75px;object-fit:contain;background:#222;
   border:1px solid #444;border-radius:8px;margin-top:8px
 }
+
+/* Новая кнопка удаления фотографии */
+.photo-preview-wrap{
+  position:relative;display:inline-block;margin-top:8px;
+  min-width:75px;min-height:75px
+}
+.photo-upload-preview{margin-top:0}
+.photo-remove-button{
+  position:absolute;top:-9px;right:-9px;
+  width:27px;height:27px;border:2px solid #111;
+  border-radius:50%;background:#ed2929;color:#fff;
+  font-size:19px;font-weight:bold;line-height:20px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;box-shadow:0 2px 9px rgba(237,41,41,.5);
+  z-index:3
+}
+.photo-remove-button:active{transform:scale(.9)}
+.photo-remove-button:disabled{opacity:.5}
+.photo-remove-hint{
+  color:#ff7777;font-size:11px;margin-top:7px;display:none
+}
+
 @media(min-width:700px){
   #products{grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;padding:18px}
   .photo{height:230px}.hero{padding:60px 20px}
@@ -957,7 +979,10 @@ async function uploadProductImage(number){
       preview.style.display="block";
     }
 
-    status.textContent="✓ Фотография загружена.";
+    const removeButton=document.getElementById("remove-photo"+number);
+    if(removeButton)removeButton.style.display="flex";
+
+    status.textContent="✓ Фотография загружена. Не забудь сохранить товар.";
     status.className="photo-upload-status admin-success";
   }catch(error){
     console.error(error);
@@ -966,6 +991,60 @@ async function uploadProductImage(number){
   }finally{
     button.disabled=false;
     button.textContent=oldText;
+  }
+}
+
+/* Удаление фотографии из карточки товара */
+function removeProductPhoto(number){
+  if(!isAdmin()){
+    alert("Доступ запрещён.");
+    return;
+  }
+
+  const urlInput=document.getElementById("edit-image"+number);
+  const fileInput=document.getElementById("edit-file"+number);
+  const preview=document.getElementById("upload-preview"+number);
+  const status=document.getElementById("upload-status"+number);
+  const removeButton=document.getElementById("remove-photo"+number);
+
+  if(!urlInput)return;
+
+  if(!urlInput.value.trim()){
+    alert("В этом поле уже нет фотографии.");
+    return;
+  }
+
+  const confirmed=confirm(
+    "Удалить фотографию "+number+" из товара?\n\n"+
+    "После подтверждения ссылка будет очищена. "+
+    "Чтобы сохранить изменение в магазине, нажми «Сохранить товар»."
+  );
+
+  if(!confirmed)return;
+
+  /* Очищаем только выбранную фотографию */
+  urlInput.value="";
+
+  if(fileInput)fileInput.value="";
+
+  if(preview){
+    preview.removeAttribute("src");
+    preview.style.display="none";
+  }
+
+  if(removeButton){
+    removeButton.style.display="none";
+  }
+
+  if(status){
+    status.textContent="Фотография удалена из редактора. Нажми «Сохранить товар», чтобы сохранить изменение.";
+    status.className="photo-upload-status admin-success";
+  }
+
+  const editorMessage=document.getElementById("editor-message");
+  if(editorMessage){
+    editorMessage.className="admin-hint admin-success";
+    editorMessage.textContent="Фотография "+number+" удалена из редактора. Не забудь сохранить товар.";
   }
 }
 
@@ -1066,9 +1145,19 @@ function renderEditor(p){
           <button type="button" id="upload-button${number}" onclick="uploadProductImage(${number})">Загрузить фото ${number}</button>
         </div>
         <div id="upload-status${number}" class="photo-upload-status"></div>
-        <img id="upload-preview${number}" class="photo-upload-preview"
-          src="${escapeHTML(url)}" alt="Предпросмотр"
-          style="display:${url?"block":"none"}">
+        <div class="photo-preview-wrap">
+          <img id="upload-preview${number}" class="photo-upload-preview"
+            src="${escapeHTML(url)}" alt="Предпросмотр"
+            style="display:${url?"block":"none"}">
+          <button
+            type="button"
+            id="remove-photo${number}"
+            class="photo-remove-button"
+            onclick="removeProductPhoto(${number})"
+            title="Удалить фотографию"
+            aria-label="Удалить фотографию"
+            style="display:${url?"flex":"none"}">×</button>
+        </div>
       </div>`;
   }).join("");
 
@@ -1110,7 +1199,11 @@ function renderEditor(p){
       </div>
 
       <h3 style="margin-top:20px">Фотографии товара</h3>
-      <div class="admin-hint">Можно добавить до 5 фотографий. Выбирай изображение из галереи и нажимай «Загрузить». После загрузки ссылка появится автоматически.</div>
+      <div class="admin-hint">
+        Можно добавить до 5 фотографий. Выбирай изображение из галереи и нажимай «Загрузить».
+        Чтобы убрать фотографию, нажми красный крестик возле неё.
+        После удаления нажми «Сохранить товар».
+      </div>
       ${photoFields}
 
       <div class="field">
