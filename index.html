@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#090909">
 <title>Pulse Sound Store</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -96,19 +96,10 @@ header{
   display:inline-block;font-size:12px;transition:transform .2s
 }
 .speaker-toggle.open .speaker-arrow{transform:rotate(180deg)}
-
 .category-dropdown{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  min-width:185px;
-  background:#191919;
-  border:1px solid #414141;
-  border-radius:13px;
-  padding:6px;
-  z-index:1000;
-  box-shadow:0 12px 30px rgba(0,0,0,.8)
+  display:none;position:fixed;top:0;left:0;min-width:185px;
+  background:#191919;border:1px solid #414141;border-radius:13px;
+  padding:6px;z-index:1000;box-shadow:0 12px 30px rgba(0,0,0,.8)
 }
 .category-dropdown.show{display:block}
 .category-option{
@@ -198,8 +189,93 @@ header{
 .empty{color:#999;text-align:center;padding:30px 15px;grid-column:1/-1}
 .error-text{color:#ff7777}
 
-/* Страница товара */
-#product-page{display:none;padding:16px;max-width:650px;margin:auto}
+/* Управление количеством */
+.cart-controls{
+  display:flex;align-items:center;gap:7px;width:100%;
+  margin-top:2px
+}
+.qty-stepper{
+  display:flex;align-items:center;justify-content:space-between;
+  flex:1;min-width:0;height:42px;padding:3px;
+  background:#222;border:1px solid #414141;border-radius:10px;
+  gap:3px
+}
+.qty-stepper button{
+  display:flex;align-items:center;justify-content:center;
+  flex:1;min-width:0;height:34px;padding:0;
+  border:0;border-radius:7px;background:#383838;color:#fff;
+  font-size:25px;font-weight:bold;line-height:1;
+  transition:background .15s,transform .15s
+}
+.qty-stepper button:active{background:#555;transform:scale(.94)}
+.qty-value{
+  min-width:24px;text-align:center;font-size:15px;
+  font-weight:900;color:#fff;font-variant-numeric:tabular-nums
+}
+.cart-action{
+  flex-shrink:0;width:46px;height:46px;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:11px;border:1px solid #484848;
+  background:#242424;color:#fff;
+  transition:transform .15s,background .15s,box-shadow .15s
+}
+.cart-action:active{transform:scale(.91)}
+.cart-action svg{width:23px;height:23px;display:block}
+.cart-action.delete{
+  background:#321414;border-color:#742828;color:#ff6262
+}
+.cart-action.delete:active{background:#541b1b}
+.cart-action.open{
+  background:linear-gradient(135deg,#ff3535,#c81717);
+  border-color:#e72b2b;color:white;
+  box-shadow:0 4px 13px rgba(237,41,41,.22)
+}
+.cart-action.open:active{box-shadow:0 2px 7px rgba(237,41,41,.35)}
+
+/* Каталог: минус и плюс прежнего размера, кнопки удаления и корзины меньше */
+.product .cart-controls{gap:5px}
+.product .qty-stepper{height:40px;gap:2px;flex:1 1 auto}
+.product .qty-stepper button{flex:0 0 31px;height:32px;font-size:23px}
+.product .qty-value{flex:1;min-width:22px;font-size:14px}
+.product .cart-action{
+  flex:0 0 30px;width:30px;height:36px;border-radius:8px
+}
+.product .cart-action svg{width:16px;height:16px}
+
+/* Анимация иконки корзины */
+.cart-fly-icon{
+  position:fixed;
+  z-index:9999;
+  left:0;
+  top:0;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#ff3535;
+  pointer-events:none;
+  filter:drop-shadow(0 0 7px rgba(237,41,41,.8));
+  will-change:transform,opacity;
+}
+.cart-fly-icon svg{width:100%;height:100%}
+@media(prefers-reduced-motion:reduce){
+  .cart-fly-icon{display:none}
+}
+
+/* Страница товара и анимация iPhone */
+#product-page{
+  display:none;position:fixed;inset:0;z-index:20;padding:16px;
+  padding-bottom:calc(125px + env(safe-area-inset-bottom));
+  width:100%;max-width:none;margin:0;overflow-y:auto;overflow-x:hidden;
+  background:var(--bg);transform:translate3d(0,0,0);
+  transition:transform .28s cubic-bezier(.22,.75,.25,1);
+  box-shadow:-12px 0 35px rgba(0,0,0,.35);
+  -webkit-overflow-scrolling:touch;touch-action:pan-y;will-change:transform
+}
+#product-detail{max-width:650px;margin:0 auto}
+#product-page.edge-swipe-dragging{transition:none}
+#product-page.edge-swipe-settling{transition:transform .27s cubic-bezier(.22,.75,.25,1)}
 .back-button{
   background:#1b1b1b;color:#ddd;border:1px solid #383838;
   border-radius:10px;padding:11px 15px;margin-bottom:16px
@@ -249,7 +325,27 @@ header{
 .spec-row:last-child{border-bottom:0}
 .spec-name{color:#999}
 .spec-value{text-align:right;overflow-wrap:anywhere;font-weight:bold}
-.detail-add{width:100%;padding:16px;font-size:15px;margin-top:18px;letter-spacing:.4px}
+
+/* Закреплённая панель покупки на странице товара */
+#detail-purchase-bar{
+  display:none;position:fixed;left:0;right:0;bottom:0;z-index:25;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(9,9,9,.94),#090909 35%);
+  border-top:1px solid #303030;backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px)
+}
+.detail-purchase-inner{width:100%;max-width:650px;margin:0 auto}
+#detail-purchase-bar .detail-add{
+  width:100%;padding:16px;font-size:15px;margin:0;letter-spacing:.4px
+}
+#detail-purchase-bar .cart-controls{margin:0;gap:8px}
+#detail-purchase-bar .qty-stepper{height:52px;gap:4px}
+#detail-purchase-bar .qty-stepper button{height:42px;font-size:29px}
+#detail-purchase-bar .qty-value{font-size:18px;min-width:35px}
+#detail-purchase-bar .cart-action{
+  width:54px;height:54px;flex:0 0 54px;border-radius:12px
+}
+#detail-purchase-bar .cart-action svg{width:27px;height:27px}
 
 /* Фото */
 #lightbox{
@@ -381,9 +477,7 @@ footer span{color:var(--red);font-weight:bold}
 }
 .photo-remove-button:active{transform:scale(.9)}
 .photo-remove-button:disabled{opacity:.5}
-.photo-remove-hint{
-  color:#ff7777;font-size:11px;margin-top:7px;display:none
-}
+.photo-remove-hint{color:#ff7777;font-size:11px;margin-top:7px;display:none}
 
 @media(min-width:700px){
   #products{grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;padding:18px}
@@ -395,6 +489,11 @@ footer span{color:var(--red);font-weight:bold}
   .price{font-size:17px}.add{font-size:11px;padding:10px 5px}
   .detail-photo{height:300px}#lightbox{padding:15px}
   #lightbox img{width:92vw;height:78vh}
+  .product .cart-controls{gap:4px}
+  .product .qty-stepper button{flex-basis:28px}
+  .product .qty-value{min-width:20px}
+  .product .cart-action{flex-basis:28px;width:28px;height:34px}
+  .product .cart-action svg{width:15px;height:15px}
 }
 </style>
 </head>
@@ -433,15 +532,9 @@ footer span{color:var(--red);font-weight:bold}
       </button>
 
       <div class="category-dropdown" id="speaker-dropdown">
-        <button class="category-option" onclick="filterProducts('speaker_mid',this,'speaker')">
-          СЧ динамики
-        </button>
-        <button class="category-option" onclick="filterProducts('speaker_high',this,'speaker')">
-          ВЧ динамики
-        </button>
-        <button class="category-option" onclick="filterProducts('midbass',this,'speaker')">
-          Мид басы
-        </button>
+        <button class="category-option" onclick="filterProducts('speaker_mid',this,'speaker')">СЧ динамики</button>
+        <button class="category-option" onclick="filterProducts('speaker_high',this,'speaker')">ВЧ динамики</button>
+        <button class="category-option" onclick="filterProducts('midbass',this,'speaker')">Мид басы</button>
       </div>
     </div>
 
@@ -456,6 +549,10 @@ footer span{color:var(--red);font-weight:bold}
   <button class="back-button" onclick="closeProduct()">← Назад в каталог</button>
   <div id="product-detail"></div>
 </main>
+
+<div id="detail-purchase-bar">
+  <div class="detail-purchase-inner" id="detail-purchase-inner"></div>
+</div>
 
 <main id="admin-page">
   <button class="back-button" onclick="closeAdmin()">← Назад в магазин</button>
@@ -546,6 +643,14 @@ let detailPhotoIndex=0;
 let adminItems=[];
 let editingId=null;
 
+let edgeSwipeStartX=null;
+let edgeSwipeStartY=null;
+let edgeSwipeCurrentX=null;
+let edgeSwipeCurrentY=null;
+let edgeSwipeActive=false;
+let edgeSwipeDragging=false;
+let edgeSwipeFinishTimer=null;
+
 const emojis={
   sub:"🔊",amp:"🔌",speaker:"🔈",
   speaker_mid:"🔈",speaker_high:"🎵",
@@ -589,10 +694,8 @@ function hasDiscount(p){
   return p.discount_active===true&&Number(p.discount_percent)>0;
 }
 
-/* Выпадающее меню динамиков */
 function toggleSpeakerMenu(event){
   event.stopPropagation();
-
   const menu=document.getElementById("speaker-dropdown");
   const button=document.getElementById("speaker-toggle");
   const isOpen=!menu.classList.contains("show");
@@ -600,12 +703,7 @@ function toggleSpeakerMenu(event){
   if(isOpen){
     const rect=button.getBoundingClientRect();
     const menuWidth=185;
-
-    const left=Math.max(
-      8,
-      Math.min(rect.left,window.innerWidth-menuWidth-8)
-    );
-
+    const left=Math.max(8,Math.min(rect.left,window.innerWidth-menuWidth-8));
     menu.style.left=left+"px";
     menu.style.top=(rect.bottom+8)+"px";
   }
@@ -618,16 +716,13 @@ function toggleSpeakerMenu(event){
 function closeSpeakerMenu(){
   const menu=document.getElementById("speaker-dropdown");
   const button=document.getElementById("speaker-toggle");
-
   if(menu)menu.classList.remove("show");
-
   if(button){
     button.classList.remove("open");
     button.setAttribute("aria-expanded","false");
   }
 }
 
-/* Цена в карточке каталога */
 function priceHTML(p){
   if(hasDiscount(p)){
     return `<div class="price">
@@ -638,7 +733,6 @@ function priceHTML(p){
       <span class="price-old">${money(p.price)}</span>
     </div>`;
   }
-
   return `<div class="price">
     <div class="price-current">${money(p.price)}</div>
     <span class="price-old price-old-empty" aria-hidden="true">&nbsp;</span>
@@ -668,6 +762,7 @@ function normalizeProduct(p){
     discount_active:p.discount_active===true
   };
 }
+
 function isAdmin(){
   return String(tg?.initDataUnsafe?.user?.id||"")===ADMIN_ID;
 }
@@ -675,7 +770,111 @@ if(isAdmin()){
   document.getElementById("admin-open").style.display="block";
 }
 
-/* Загрузка каталога */
+/* Анимация первого добавления товара в корзину */
+function animateCartFly(sourceButton){
+  if(!sourceButton)return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+
+  const target=document.querySelector(".cart-button");
+  if(!target)return;
+
+  const start=sourceButton.getBoundingClientRect();
+  const end=target.getBoundingClientRect();
+
+  const icon=document.createElement("div");
+  icon.className="cart-fly-icon";
+  icon.innerHTML=`
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="21" r="1"/>
+      <circle cx="19" cy="21" r="1"/>
+      <path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6L22 7H5"/>
+    </svg>`;
+
+  const startX=start.left+start.width/2-15;
+  const startY=start.top+start.height/2-15;
+  const endX=end.left+end.width/2-15;
+  const endY=end.top+end.height/2-15;
+
+  icon.style.left=startX+"px";
+  icon.style.top=startY+"px";
+  document.body.appendChild(icon);
+
+  const animation=icon.animate([
+    {transform:"translate(0,0) scale(1)",opacity:1},
+    {
+      transform:`translate(${endX-startX}px,${endY-startY}px) scale(.35)`,
+      opacity:.15
+    }
+  ],{
+    duration:1200,
+    easing:"cubic-bezier(.22,.75,.25,1)",
+    fill:"forwards"
+  });
+
+  animation.onfinish=()=>icon.remove();
+}
+
+/* HTML кнопок корзины для карточки и страницы товара */
+function cartControlsHTML(p,detail=false){
+  const existing=cart.find(item=>item.id===p.id);
+  const inStock=p.stock>0;
+
+  if(!existing){
+    const buttonClass=detail?"add detail-add":"add";
+    const label=detail?"Добавить в корзину":"В корзину";
+
+    return `
+      <button class="${buttonClass} ${inStock?"":"out-of-stock"}"
+        onclick="event.stopPropagation();addToCart(${p.id},this)"
+        ${inStock?"":"disabled"}>
+        ${inStock?label:"Нет в наличии"}
+      </button>`;
+  }
+
+  return `
+    <div class="cart-controls" onclick="event.stopPropagation()">
+      <div class="qty-stepper">
+        <button type="button" aria-label="Уменьшить количество"
+          onclick="changeQuantity(${p.id},-1)">−</button>
+        <span class="qty-value">${existing.qty}</span>
+        <button type="button" aria-label="Увеличить количество"
+          onclick="changeQuantity(${p.id},1)">+</button>
+      </div>
+
+      <button type="button" class="cart-action delete"
+        aria-label="Удалить товар"
+        title="Удалить товар из корзины"
+        onclick="removeFromCart(${p.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/>
+          <path d="M8 6V4h8v2"/>
+          <path d="M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v5M14 11v5"/>
+        </svg>
+      </button>
+
+      <button type="button" class="cart-action open"
+        aria-label="Открыть корзину"
+        title="Открыть корзину"
+        onclick="openCart()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="19" cy="21" r="1"/>
+          <path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6L22 7H5"/>
+        </svg>
+      </button>
+    </div>`;
+}
+
+function refreshCartControls(){
+  if(items.length)render();
+  if(detailProductId!==null)renderProductDetail();
+}
+
 async function loadProducts(){
   const box=document.getElementById("products");
   try{
@@ -701,7 +900,6 @@ async function loadProducts(){
   }
 }
 
-/* Каталог */
 function render(list){
   const box=document.getElementById("products");
   const products=list||(currentCategory==="all"?items:items.filter(p=>p.cat===currentCategory));
@@ -715,7 +913,6 @@ function render(list){
     const photos=p.images||[];
     const index=galleryIndexes[p.id]||0;
     const photo=photos[index]||"";
-    const inStock=p.stock>0;
 
     return `
       <div class="product" onclick="openProduct(${p.id})">
@@ -737,14 +934,12 @@ function render(list){
           <h3>${escapeHTML(p.name)}</h3>
           <p>${escapeHTML(p.desc)}</p>
           ${priceHTML(p)}
-          <button class="add ${inStock?"":"out-of-stock"}" ${inStock?"":"disabled"}
-            onclick="event.stopPropagation();addToCart(${p.id})">
-            ${inStock?"В корзину":"Нет в наличии"}
-          </button>
+          ${cartControlsHTML(p,false)}
         </div>
       </div>`;
   }).join("");
 }
+
 function changeCardPhoto(id,direction){
   const p=items.find(x=>x.id===id);
   if(!p||p.images.length<2)return;
@@ -758,7 +953,6 @@ function selectCardPhoto(id,index){
   render();
 }
 
-/* Фильтрация категорий */
 function filterProducts(category,button,parentCategory){
   currentCategory=category;
   closeSpeakerMenu();
@@ -777,25 +971,53 @@ function filterProducts(category,button,parentCategory){
   render();
 }
 
-/* Страница товара */
 function openProduct(id){
   const p=items.find(x=>x.id===id);
   if(!p)return;
+
+  resetEdgeSwipe();
   detailProductId=id;
   detailPhotoIndex=0;
   closeSpeakerMenu();
-  document.getElementById("catalog-page").style.display="none";
+
+  document.getElementById("catalog-page").style.display="block";
   document.getElementById("admin-page").style.display="none";
-  document.getElementById("product-page").style.display="block";
+
+  const page=document.getElementById("product-page");
+  document.getElementById("detail-purchase-bar").style.display="none";
+
+  clearTimeout(edgeSwipeFinishTimer);
+  edgeSwipeFinishTimer=null;
+
+  page.classList.remove("edge-swipe-dragging","edge-swipe-settling");
+  page.style.transition="none";
+  page.style.transform="translate3d(0,0,0)";
+  page.style.display="block";
+
   renderProductDetail();
-  window.scrollTo(0,0);
+  page.scrollTop=0;
+
+  requestAnimationFrame(()=>{page.style.transition=""});
 }
+
 function closeProduct(){
-  document.getElementById("product-page").style.display="none";
+  const page=document.getElementById("product-page");
+
+  clearTimeout(edgeSwipeFinishTimer);
+  edgeSwipeFinishTimer=null;
+
+  page.classList.remove("edge-swipe-dragging","edge-swipe-settling");
+  page.style.transform="";
+  page.style.transition="";
+  page.style.display="none";
+
+  document.getElementById("detail-purchase-bar").style.display="none";
   document.getElementById("catalog-page").style.display="block";
   detailProductId=null;
+  resetEdgeSwipe();
   window.scrollTo(0,0);
 }
+
 function renderProductDetail(){
   const p=items.find(x=>x.id===detailProductId);
   if(!p)return;
@@ -849,12 +1071,12 @@ function renderProductDetail(){
     <div class="detail-section">
       <h3>Характеристики</h3>
       ${specsHTML||'<div class="detail-description">Характеристики этого товара пока не заполнены.</div>'}
-    </div>
-    <button class="add detail-add ${inStock?"":"out-of-stock"}"
-      onclick="addToCart(${p.id})" ${inStock?"":"disabled"}>
-      ${inStock?"Добавить в корзину":"Нет в наличии"}
-    </button>`;
+    </div>`;
+
+  document.getElementById("detail-purchase-inner").innerHTML=cartControlsHTML(p,true);
+  document.getElementById("detail-purchase-bar").style.display="block";
 }
+
 function changeDetailPhoto(direction){
   const p=items.find(x=>x.id===detailProductId);
   if(!p||p.images.length<2)return;
@@ -868,9 +1090,151 @@ function selectDetailPhoto(index){
   renderProductDetail();
 }
 
+/* Интерактивный свайп назад от левого края */
+function resetEdgeSwipe(){
+  edgeSwipeStartX=null;
+  edgeSwipeStartY=null;
+  edgeSwipeCurrentX=null;
+  edgeSwipeCurrentY=null;
+  edgeSwipeActive=false;
+  edgeSwipeDragging=false;
+}
+
+function isProductPageVisible(){
+  const productPage=document.getElementById("product-page");
+  const lightbox=document.getElementById("lightbox");
+
+  return productPage &&
+    productPage.style.display==="block" &&
+    lightbox.style.display!=="flex" &&
+    detailProductId!==null;
+}
+
+function cancelEdgeSwipeAnimation(){
+  const page=document.getElementById("product-page");
+  if(!page)return;
+
+  clearTimeout(edgeSwipeFinishTimer);
+  edgeSwipeFinishTimer=null;
+
+  page.classList.remove("edge-swipe-dragging");
+  page.classList.add("edge-swipe-settling");
+  page.style.transform="translate3d(0,0,0)";
+
+  edgeSwipeFinishTimer=setTimeout(()=>{
+    page.classList.remove("edge-swipe-settling");
+    page.style.transform="translate3d(0,0,0)";
+    edgeSwipeFinishTimer=null;
+  },350);
+}
+
+function finishEdgeSwipe(){
+  const page=document.getElementById("product-page");
+  if(!page)return;
+
+  clearTimeout(edgeSwipeFinishTimer);
+  edgeSwipeFinishTimer=null;
+
+  page.classList.remove("edge-swipe-dragging");
+  page.classList.add("edge-swipe-settling");
+  page.style.transform="translate3d(100vw,0,0)";
+
+  edgeSwipeFinishTimer=setTimeout(()=>{
+    edgeSwipeFinishTimer=null;
+    closeProduct();
+  },300);
+}
+
+window.addEventListener("touchstart",function(event){
+  if(!isProductPageVisible())return;
+  if(!event.touches||event.touches.length!==1)return;
+
+  const touch=event.touches[0];
+  if(touch.clientX>24)return;
+
+  resetEdgeSwipe();
+  edgeSwipeStartX=touch.clientX;
+  edgeSwipeStartY=touch.clientY;
+  edgeSwipeCurrentX=touch.clientX;
+  edgeSwipeCurrentY=touch.clientY;
+  edgeSwipeActive=true;
+},{passive:true});
+
+window.addEventListener("touchmove",function(event){
+  if(!edgeSwipeActive)return;
+
+  if(!event.touches||event.touches.length!==1){
+    const wasDragging=edgeSwipeDragging;
+    resetEdgeSwipe();
+    if(wasDragging)cancelEdgeSwipeAnimation();
+    return;
+  }
+
+  const touch=event.touches[0];
+  edgeSwipeCurrentX=touch.clientX;
+  edgeSwipeCurrentY=touch.clientY;
+
+  const dx=edgeSwipeCurrentX-edgeSwipeStartX;
+  const dy=Math.abs(edgeSwipeCurrentY-edgeSwipeStartY);
+
+  if(dy>35&&dy>Math.abs(dx)){
+    const wasDragging=edgeSwipeDragging;
+    resetEdgeSwipe();
+    if(wasDragging)cancelEdgeSwipeAnimation();
+    return;
+  }
+
+  if(dx>0&&dx>dy*1.15){
+    const page=document.getElementById("product-page");
+    if(!page)return;
+
+    clearTimeout(edgeSwipeFinishTimer);
+    edgeSwipeFinishTimer=null;
+
+    if(!edgeSwipeDragging){
+      edgeSwipeDragging=true;
+      page.classList.remove("edge-swipe-settling");
+      page.classList.add("edge-swipe-dragging");
+    }
+
+    const distance=Math.min(dx,window.innerWidth);
+    page.style.transform=`translate3d(${distance}px,0,0)`;
+  }
+},{passive:true});
+
+window.addEventListener("touchend",function(){
+  if(!edgeSwipeActive)return;
+
+  const dx=edgeSwipeCurrentX-edgeSwipeStartX;
+  const dy=Math.abs(edgeSwipeCurrentY-edgeSwipeStartY);
+  const wasDragging=edgeSwipeDragging;
+
+  const shouldGoBack=
+    isProductPageVisible() &&
+    wasDragging &&
+    dx>=95 &&
+    dx>dy*1.35;
+
+  resetEdgeSwipe();
+
+  if(shouldGoBack)finishEdgeSwipe();
+  else if(wasDragging)cancelEdgeSwipeAnimation();
+},{passive:true});
+
+window.addEventListener("touchcancel",function(){
+  const wasDragging=edgeSwipeDragging;
+  resetEdgeSwipe();
+  if(wasDragging)cancelEdgeSwipeAnimation();
+},{passive:true});
+
 /* Увеличенное фото */
 function openLightbox(url){
   if(!url)return;
+
+  const wasDragging=edgeSwipeDragging;
+  resetEdgeSwipe();
+  if(wasDragging)cancelEdgeSwipeAnimation();
+
   document.getElementById("lightbox-image").src=url;
   document.getElementById("lightbox").style.display="flex";
   document.body.style.overflow="hidden";
@@ -882,19 +1246,34 @@ function closeLightbox(){
 }
 
 /* Корзина */
-function addToCart(id){
+function addToCart(id,sourceButton){
   const p=items.find(x=>x.id===id);
   if(!p)return;
+
   const existing=cart.find(x=>x.id===id);
+
   if(existing){
-    if(existing.qty>=p.stock){alert("Больше товаров нет в наличии");return}
+    if(existing.qty>=p.stock){
+      alert("Больше товаров нет в наличии");
+      return;
+    }
     existing.qty++;
   }else{
-    if(p.stock<1){alert("Товара сейчас нет в наличии");return}
+    if(p.stock<1){
+      alert("Товара сейчас нет в наличии");
+      return;
+    }
+
+    /* Анимация запускается только при первом добавлении */
+    animateCartFly(sourceButton);
+
     cart.push({...p,qty:1});
   }
+
   updateCart();
+  refreshCartControls();
 }
+
 function updateCart(){
   document.getElementById("cart-count").textContent=cart.reduce((s,p)=>s+p.qty,0);
   const container=document.getElementById("cart-items");
@@ -924,20 +1303,35 @@ function updateCart(){
   document.getElementById("cart-total").textContent="Итого: "+money(total);
   calculateOrder();
 }
+
 function changeQuantity(id,change){
   const p=cart.find(x=>x.id===id);
   if(!p)return;
+
   const catalog=items.find(x=>x.id===id);
   const next=p.qty+change;
-  if(next<=0){removeFromCart(id);return}
-  if(catalog&&next>catalog.stock){alert("Больше товаров нет в наличии");return}
+
+  if(next<=0){
+    removeFromCart(id);
+    return;
+  }
+
+  if(catalog&&next>catalog.stock){
+    alert("Больше товаров нет в наличии");
+    return;
+  }
+
   p.qty=next;
   updateCart();
+  refreshCartControls();
 }
+
 function removeFromCart(id){
   cart=cart.filter(p=>p.id!==id);
   updateCart();
+  refreshCartControls();
 }
+
 function openCart(){
   updateCart();
   document.getElementById("cart-modal").style.display="block";
@@ -955,10 +1349,12 @@ function calculateOrder(){
   const summary=document.getElementById("order-summary");
   const method=document.getElementById("delivery-method");
   if(!summary||!method)return;
+
   const subtotal=cart.reduce((sum,p)=>sum+finalPrice(p)*p.qty,0);
   const local=method.value==="local";
   const delivery=local?300:0;
   const total=subtotal+delivery;
+
   summary.innerHTML=`
     <h3>Ваш заказ</h3>
     <div class="spec-row"><span class="spec-name">Товары</span><strong>${money(subtotal)}</strong></div>
@@ -978,7 +1374,10 @@ document.getElementById("order-form").addEventListener("submit",async function(e
   const comment=document.getElementById("customer-comment").value.trim();
   const method=document.getElementById("delivery-method").value;
 
-  if(!name||!phone||!address){alert("Заполните имя, телефон и адрес доставки.");return}
+  if(!name||!phone||!address){
+    alert("Заполните имя, телефон и адрес доставки.");
+    return;
+  }
 
   for(const cartItem of cart){
     const product=items.find(p=>p.id===cartItem.id);
@@ -1006,15 +1405,21 @@ document.getElementById("order-form").addEventListener("submit",async function(e
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(order)
     });
+
     const responseText=await response.text();
     let result;
+
     try{result=JSON.parse(responseText)}
     catch(e){throw new Error("Сервер вернул непонятный ответ: "+responseText.slice(0,200))}
-    if(!response.ok||!result.success)throw new Error(result.error||"Не удалось отправить заказ. Код: "+response.status);
+
+    if(!response.ok||!result.success){
+      throw new Error(result.error||"Не удалось отправить заказ. Код: "+response.status);
+    }
 
     alert("Заказ №"+(result.order_id||"")+" успешно оформлен! Скоро с вами свяжутся.");
     cart=[];
     updateCart();
+    refreshCartControls();
     this.reset();
     calculateOrder();
     closeOrder();
@@ -1048,7 +1453,6 @@ async function adminRequest(action,extra={}){
   return result;
 }
 
-/* Загрузка фотографии в Storage через admin-api- */
 async function uploadProductImage(number){
   if(!isAdmin()){
     alert("Доступ запрещён.");
@@ -1097,20 +1501,15 @@ async function uploadProductImage(number){
 
     const response=await fetch(ADMIN_URL,{
       method:"POST",
-      headers:{
-        "x-telegram-init-data":tg.initData
-      },
+      headers:{"x-telegram-init-data":tg.initData},
       body:formData
     });
 
     const responseText=await response.text();
     let result;
 
-    try{
-      result=JSON.parse(responseText);
-    }catch(e){
-      throw new Error("Сервер вернул непонятный ответ: "+responseText.slice(0,200));
-    }
+    try{result=JSON.parse(responseText)}
+    catch(e){throw new Error("Сервер вернул непонятный ответ: "+responseText.slice(0,200))}
 
     if(!response.ok||result.success!==true||!result.url){
       throw new Error(result.error||"Не удалось загрузить фотографию.");
@@ -1139,7 +1538,6 @@ async function uploadProductImage(number){
   }
 }
 
-/* Удаление фотографии из карточки товара */
 function removeProductPhoto(number){
   if(!isAdmin()){
     alert("Доступ запрещён.");
@@ -1175,9 +1573,7 @@ function removeProductPhoto(number){
     preview.style.display="none";
   }
 
-  if(removeButton){
-    removeButton.style.display="none";
-  }
+  if(removeButton)removeButton.style.display="none";
 
   if(status){
     status.textContent="Фотография удалена из редактора. Нажми «Сохранить товар», чтобы сохранить изменение.";
@@ -1194,8 +1590,10 @@ function removeProductPhoto(number){
 function openAdmin(){
   if(!isAdmin()){alert("У вас нет доступа к админ-панели.");return}
   closeSpeakerMenu();
+  resetEdgeSwipe();
   document.getElementById("catalog-page").style.display="none";
   document.getElementById("product-page").style.display="none";
+  document.getElementById("detail-purchase-bar").style.display="none";
   document.getElementById("admin-page").style.display="block";
   window.scrollTo(0,0);
   loadAdmin();
@@ -1209,6 +1607,7 @@ function closeAdmin(){
 async function loadAdmin(){
   const box=document.getElementById("admin-products");
   box.innerHTML='<div class="empty">Загрузка товаров...</div>';
+
   try{
     const result=await adminRequest("list");
     adminItems=(result.products||[]).map(normalizeProduct);
@@ -1276,6 +1675,7 @@ function renderEditor(p){
   const photoFields=Array.from({length:5},(_,index)=>{
     const number=index+1;
     const url=urls[index]||"";
+
     return `
       <div class="photo-upload">
         <div class="photo-upload-title">Фотография ${number} ${number===1?"(главная)":""}</div>
@@ -1451,6 +1851,7 @@ async function deleteProduct(id){
     await adminRequest("delete",{id});
     cart=cart.filter(p=>p.id!==id);
     updateCart();
+    refreshCartControls();
     await loadAdmin();
     await loadProducts();
     alert("Товар удалён.");
@@ -1477,7 +1878,6 @@ window.addEventListener("keydown",function(e){
   }
 });
 
-/* Закрываем меню при прокрутке, чтобы оно не оставалось в старом месте */
 window.addEventListener("scroll",function(){
   closeSpeakerMenu();
 },{passive:true});
