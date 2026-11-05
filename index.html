@@ -18,12 +18,25 @@ html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
 button{cursor:pointer;font-family:inherit}
 button:disabled{opacity:.65;cursor:not-allowed}
+
+/* Закреплённая шапка магазина */
 header{
-  padding:15px 18px;display:flex;justify-content:space-between;
+  padding:calc(15px + env(safe-area-inset-top)) 18px 15px;
+  min-height:calc(62px + env(safe-area-inset-top));
+  display:flex;justify-content:space-between;
   align-items:center;border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:rgba(9,9,9,.94);
-  backdrop-filter:blur(14px);z-index:10
+  position:fixed;top:0;left:0;right:0;
+  background:rgba(9,9,9,.94);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  z-index:24
 }
+
+/* Отступ под закреплённую шапку в каталоге */
+#catalog-page{
+  padding-top:calc(62px + env(safe-area-inset-top))
+}
+
 .logo{font-size:22px;font-weight:900;letter-spacing:1px}
 .logo span,.hero h1 span{color:var(--red)}
 .cart-button,.add,.checkout{
@@ -265,8 +278,9 @@ header{
 
 /* Страница товара и анимация iPhone */
 #product-page{
-  display:none;position:fixed;inset:0;z-index:20;padding:16px;
-  padding-bottom:calc(125px + env(safe-area-inset-bottom));
+  display:none;position:fixed;inset:0;z-index:20;
+  padding:calc(78px + env(safe-area-inset-top)) 16px
+    calc(125px + env(safe-area-inset-bottom));
   width:100%;max-width:none;margin:0;overflow-y:auto;overflow-x:hidden;
   background:var(--bg);transform:translate3d(0,0,0);
   transition:transform .28s cubic-bezier(.22,.75,.25,1);
@@ -335,8 +349,11 @@ header{
   -webkit-backdrop-filter:blur(16px)
 }
 .detail-purchase-inner{width:100%;max-width:650px;margin:0 auto}
+
+/* Уменьшенная кнопка добавления на странице товара */
 #detail-purchase-bar .detail-add{
-  width:100%;padding:16px;font-size:15px;margin:0;letter-spacing:.4px
+  width:100%;padding:11px 16px;min-height:44px;
+  font-size:14px;margin:0;letter-spacing:.4px
 }
 #detail-purchase-bar .cart-controls{margin:0;gap:8px}
 #detail-purchase-bar .qty-stepper{height:52px;gap:4px}
@@ -411,7 +428,11 @@ footer{
 footer span{color:var(--red);font-weight:bold}
 
 /* Админ-панель */
-#admin-page{display:none;padding:16px;max-width:700px;margin:auto}
+#admin-page{
+  display:none;
+  padding:calc(78px + env(safe-area-inset-top)) 16px 16px;
+  max-width:700px;margin:auto
+}
 .admin-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:5px 0 18px}
 .admin-top h2{font-size:23px;margin:0}
 .admin-card{
