@@ -134,6 +134,32 @@ header{
   padding:4px 7px;font-size:11px;font-weight:bold;margin-right:6px;
   vertical-align:3px
 }
+
+/* Выравнивание цен только в карточках каталога */
+.product .price{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:3px;
+  min-height:48px;
+}
+.product .price-current{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  min-height:23px;
+}
+.product .price-current .discount-badge{margin-right:0}
+.product .price-old{
+  display:block;
+  margin-left:0;
+  line-height:14px;
+}
+.product .price-old-empty{
+  visibility:hidden;
+}
+
 .add{width:100%;padding:11px 8px;font-size:12px;letter-spacing:.3px}
 .add.out-of-stock{
   background:#260909;color:#ff4545;border:1px solid #ff2929;
@@ -504,16 +530,25 @@ function finalPrice(p){
 function hasDiscount(p){
   return p.discount_active===true&&Number(p.discount_percent)>0;
 }
+
+/* Цена в карточке каталога */
 function priceHTML(p){
   if(hasDiscount(p)){
     return `<div class="price">
-      <span class="discount-badge">−${Number(p.discount_percent)}%</span>
-      ${money(finalPrice(p))}
+      <div class="price-current">
+        <span class="discount-badge">−${Number(p.discount_percent)}%</span>
+        <span>${money(finalPrice(p))}</span>
+      </div>
       <span class="price-old">${money(p.price)}</span>
     </div>`;
   }
-  return `<div class="price">${money(p.price)}</div>`;
+
+  return `<div class="price">
+    <div class="price-current">${money(p.price)}</div>
+    <span class="price-old price-old-empty" aria-hidden="true">&nbsp;</span>
+  </div>`;
 }
+
 function normalizeProduct(p){
   let specs=p.specifications||p.specs||null;
   if(typeof specs==="string"){
