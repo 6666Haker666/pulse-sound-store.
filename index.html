@@ -73,7 +73,12 @@ header{
 }
 @keyframes pulseTravel{from{stroke-dashoffset:320}to{stroke-dashoffset:0}}
 @media(prefers-reduced-motion:reduce){.pulse-moving{animation:none}}
-.categories{display:flex;gap:9px;overflow-x:auto;padding:17px 15px;scrollbar-width:none}
+
+/* Категории */
+.categories{
+  display:flex;gap:9px;overflow-x:auto;padding:17px 15px;
+  scrollbar-width:none;align-items:center
+}
 .categories::-webkit-scrollbar{display:none}
 .category{
   flex-shrink:0;border:1px solid #383838;color:#ccc;background:#151515;
@@ -83,6 +88,38 @@ header{
   background:var(--red);color:white;border-color:var(--red);
   box-shadow:0 4px 15px rgba(237,41,41,.25)
 }
+
+/* Выпадающее меню динамиков */
+.category-wrap{position:relative;flex-shrink:0}
+.speaker-toggle{display:flex;align-items:center;gap:7px}
+.speaker-arrow{
+  display:inline-block;font-size:12px;transition:transform .2s
+}
+.speaker-toggle.open .speaker-arrow{transform:rotate(180deg)}
+
+.category-dropdown{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  min-width:185px;
+  background:#191919;
+  border:1px solid #414141;
+  border-radius:13px;
+  padding:6px;
+  z-index:1000;
+  box-shadow:0 12px 30px rgba(0,0,0,.8)
+}
+.category-dropdown.show{display:block}
+.category-option{
+  display:block;width:100%;padding:12px 13px;text-align:left;
+  color:#ddd;background:transparent;border:0;border-radius:8px;
+  font-size:13px;transition:background .2s,color .2s
+}
+.category-option:hover{background:#292929}
+.category-option.active{background:#401616;color:#ff5555;font-weight:bold}
+.category-option+.category-option{margin-top:3px}
+
 .section-title{padding:0 16px;font-size:21px;font-weight:800;margin:9px 0 5px}
 #products{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
@@ -104,7 +141,10 @@ header{
   background:linear-gradient(90deg,transparent,rgba(237,41,41,.3),transparent);
   pointer-events:none
 }
-.photo img{width:100%;height:100%;object-fit:contain;cursor:zoom-in;transition:transform .35s}
+.photo img{
+  display:block;width:100%;height:100%;object-fit:cover;
+  object-position:center;cursor:zoom-in;transition:transform .35s
+}
 .product:hover .photo img{transform:scale(1.035)}
 .photo-placeholder{font-size:52px;filter:drop-shadow(0 5px 10px #000)}
 .gallery-arrow{
@@ -134,36 +174,20 @@ header{
   padding:4px 7px;font-size:11px;font-weight:bold;margin-right:6px;
   vertical-align:3px
 }
-
-/* Выравнивание цен только в карточках каталога */
 .product .price{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  gap:3px;
-  min-height:48px;
+  display:flex;flex-direction:column;align-items:flex-start;
+  gap:3px;min-height:48px
 }
 .product .price-current{
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:6px;
-  min-height:23px;
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-height:23px
 }
 .product .price-current .discount-badge{margin-right:0}
-.product .price-old{
-  display:block;
-  margin-left:0;
-  line-height:14px;
-}
-.product .price-old-empty{
-  visibility:hidden;
-}
-
+.product .price-old{display:block;margin-left:0;line-height:14px}
+.product .price-old-empty{visibility:hidden}
 .add{width:100%;padding:11px 8px;font-size:12px;letter-spacing:.3px}
 .add.out-of-stock{
   background:#260909;color:#ff4545;border:1px solid #ff2929;
-  text-shadow:0 0 5px #ff2222,0 0 12px rgba(255,35,35,.9);
+  text-shadow:0 0 5px #ff2222,0 0 12px rgba(255,25,25,.9);
   box-shadow:0 0 7px rgba(255,25,25,.65),inset 0 0 12px rgba(255,25,25,.2);
   animation:redGlow 1.8s ease-in-out infinite alternate
 }
@@ -190,7 +214,10 @@ header{
   content:"";position:absolute;bottom:0;left:12%;right:12%;height:1px;
   background:linear-gradient(90deg,transparent,rgba(237,41,41,.4),transparent)
 }
-.detail-photo img{width:100%;height:100%;object-fit:contain;cursor:zoom-in;transition:transform .3s}
+.detail-photo img{
+  display:block;width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:cover;object-position:center;cursor:zoom-in;transition:transform .3s
+}
 .detail-photo img:active{transform:scale(.98)}
 .detail-photo .gallery-arrow{width:42px;height:42px;font-size:30px}
 .detail-photo .gallery-dots{bottom:13px}
@@ -338,8 +365,6 @@ footer span{color:var(--red);font-weight:bold}
   width:75px;height:75px;object-fit:contain;background:#222;
   border:1px solid #444;border-radius:8px;margin-top:8px
 }
-
-/* Новая кнопка удаления фотографии */
 .photo-preview-wrap{
   position:relative;display:inline-block;margin-top:8px;
   min-width:75px;min-height:75px
@@ -400,11 +425,30 @@ footer span{color:var(--red);font-weight:bold}
     <button class="category active" onclick="filterProducts('all',this)">Все товары</button>
     <button class="category" onclick="filterProducts('sub',this)">Сабвуферы</button>
     <button class="category" onclick="filterProducts('amp',this)">Усилители</button>
-    <button class="category" onclick="filterProducts('speaker',this)">Динамики</button>
+
+    <div class="category-wrap">
+      <button class="category speaker-toggle" id="speaker-toggle"
+        onclick="toggleSpeakerMenu(event)" aria-expanded="false">
+        Динамики <span class="speaker-arrow">▼</span>
+      </button>
+
+      <div class="category-dropdown" id="speaker-dropdown">
+        <button class="category-option" onclick="filterProducts('speaker_mid',this,'speaker')">
+          СЧ динамики
+        </button>
+        <button class="category-option" onclick="filterProducts('speaker_high',this,'speaker')">
+          ВЧ динамики
+        </button>
+        <button class="category-option" onclick="filterProducts('midbass',this,'speaker')">
+          Мид басы
+        </button>
+      </div>
+    </div>
+
     <button class="category" onclick="filterProducts('accessory',this)">Аксессуары</button>
   </div>
 
-  <h2 class="section-title">Каталог товаров</h2>
+  <h2 class="section-title" id="catalog-title">Каталог товаров</h2>
   <div id="products"><div class="empty">Загружаем каталог...</div></div>
 </main>
 
@@ -502,7 +546,21 @@ let detailPhotoIndex=0;
 let adminItems=[];
 let editingId=null;
 
-const emojis={sub:"🔊",amp:"🔌",speaker:"🔈",accessory:"🧰"};
+const emojis={
+  sub:"🔊",amp:"🔌",speaker:"🔈",
+  speaker_mid:"🔈",speaker_high:"🎵",
+  midbass:"🔊",accessory:"🧰"
+};
+
+const categoryTitles={
+  all:"Каталог товаров",
+  sub:"Сабвуферы",
+  amp:"Усилители",
+  speaker_mid:"СЧ динамики",
+  speaker_high:"ВЧ динамики",
+  midbass:"Мид басы",
+  accessory:"Аксессуары"
+};
 
 function money(value){
   return Number(value||0).toLocaleString("ru-RU")+" ₽";
@@ -529,6 +587,44 @@ function finalPrice(p){
 }
 function hasDiscount(p){
   return p.discount_active===true&&Number(p.discount_percent)>0;
+}
+
+/* Выпадающее меню динамиков */
+function toggleSpeakerMenu(event){
+  event.stopPropagation();
+
+  const menu=document.getElementById("speaker-dropdown");
+  const button=document.getElementById("speaker-toggle");
+  const isOpen=!menu.classList.contains("show");
+
+  if(isOpen){
+    const rect=button.getBoundingClientRect();
+    const menuWidth=185;
+
+    const left=Math.max(
+      8,
+      Math.min(rect.left,window.innerWidth-menuWidth-8)
+    );
+
+    menu.style.left=left+"px";
+    menu.style.top=(rect.bottom+8)+"px";
+  }
+
+  menu.classList.toggle("show",isOpen);
+  button.classList.toggle("open",isOpen);
+  button.setAttribute("aria-expanded",String(isOpen));
+}
+
+function closeSpeakerMenu(){
+  const menu=document.getElementById("speaker-dropdown");
+  const button=document.getElementById("speaker-toggle");
+
+  if(menu)menu.classList.remove("show");
+
+  if(button){
+    button.classList.remove("open");
+    button.setAttribute("aria-expanded","false");
+  }
 }
 
 /* Цена в карточке каталога */
@@ -661,10 +757,23 @@ function selectCardPhoto(id,index){
   galleryIndexes[id]=index;
   render();
 }
-function filterProducts(category,button){
+
+/* Фильтрация категорий */
+function filterProducts(category,button,parentCategory){
   currentCategory=category;
+  closeSpeakerMenu();
+
   document.querySelectorAll(".category").forEach(b=>b.classList.remove("active"));
-  button.classList.add("active");
+  document.querySelectorAll(".category-option").forEach(b=>b.classList.remove("active"));
+
+  if(parentCategory==="speaker"){
+    document.getElementById("speaker-toggle").classList.add("active");
+    button.classList.add("active");
+  }else{
+    button.classList.add("active");
+  }
+
+  document.getElementById("catalog-title").textContent=categoryTitles[category]||"Каталог товаров";
   render();
 }
 
@@ -674,6 +783,7 @@ function openProduct(id){
   if(!p)return;
   detailProductId=id;
   detailPhotoIndex=0;
+  closeSpeakerMenu();
   document.getElementById("catalog-page").style.display="none";
   document.getElementById("admin-page").style.display="none";
   document.getElementById("product-page").style.display="block";
@@ -1057,9 +1167,7 @@ function removeProductPhoto(number){
 
   if(!confirmed)return;
 
-  /* Очищаем только выбранную фотографию */
   urlInput.value="";
-
   if(fileInput)fileInput.value="";
 
   if(preview){
@@ -1085,6 +1193,7 @@ function removeProductPhoto(number){
 
 function openAdmin(){
   if(!isAdmin()){alert("У вас нет доступа к админ-панели.");return}
+  closeSpeakerMenu();
   document.getElementById("catalog-page").style.display="none";
   document.getElementById("product-page").style.display="none";
   document.getElementById("admin-page").style.display="block";
@@ -1228,7 +1337,10 @@ function renderEditor(p){
         <select id="edit-category">
           <option value="sub" ${p.cat==="sub"?"selected":""}>Сабвуферы</option>
           <option value="amp" ${p.cat==="amp"?"selected":""}>Усилители</option>
-          <option value="speaker" ${p.cat==="speaker"?"selected":""}>Динамики</option>
+          <option value="speaker_mid" ${p.cat==="speaker_mid"?"selected":""}>СЧ динамики</option>
+          <option value="speaker_high" ${p.cat==="speaker_high"?"selected":""}>ВЧ динамики</option>
+          <option value="midbass" ${p.cat==="midbass"?"selected":""}>Мид басы</option>
+          <option value="speaker" ${p.cat==="speaker"?"selected":""}>Динамики (старая категория)</option>
           <option value="accessory" ${p.cat==="accessory"?"selected":""}>Аксессуары</option>
         </select>
       </div>
@@ -1345,17 +1457,30 @@ async function deleteProduct(id){
   }catch(error){alert(error.message)}
 }
 
-/* Закрытие окон */
+/* Закрытие окон и меню */
 window.addEventListener("click",function(e){
   if(e.target.id==="cart-modal")closeCart();
   if(e.target.id==="order-modal")closeOrder();
   if(e.target.id==="lightbox")closeLightbox();
-});
-window.addEventListener("keydown",function(e){
-  if(e.key==="Escape"){
-    closeLightbox();closeCart();closeOrder();
+
+  const speakerWrap=document.querySelector(".category-wrap");
+  const menu=document.getElementById("speaker-dropdown");
+
+  if(speakerWrap&&!speakerWrap.contains(e.target)&&!menu.contains(e.target)){
+    closeSpeakerMenu();
   }
 });
+
+window.addEventListener("keydown",function(e){
+  if(e.key==="Escape"){
+    closeLightbox();closeCart();closeOrder();closeSpeakerMenu();
+  }
+});
+
+/* Закрываем меню при прокрутке, чтобы оно не оставалось в старом месте */
+window.addEventListener("scroll",function(){
+  closeSpeakerMenu();
+},{passive:true});
 
 /* Запуск */
 updateCart();
