@@ -17,7 +17,7 @@
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:#fff;font-family:Arial,sans-serif}
 button{cursor:pointer;font-family:inherit}
-button:disabled{opacity:1;cursor:not-allowed}
+button:disabled{opacity:.65;cursor:not-allowed}
 header{
   padding:15px 18px;display:flex;justify-content:space-between;
   align-items:center;border-bottom:1px solid var(--border);
@@ -294,6 +294,24 @@ footer span{color:var(--red);font-weight:bold}
 .admin-grid .field{min-width:0}
 .admin-error{color:#ff7777;font-size:13px;white-space:pre-wrap}
 .admin-success{color:#8edb91;font-size:13px}
+.photo-upload{
+  border:1px solid #333;background:#111;border-radius:11px;
+  padding:12px;margin:12px 0
+}
+.photo-upload-title{font-size:13px;font-weight:bold;margin-bottom:9px}
+.photo-upload input[type=file]{
+  display:block;width:100%;font-size:12px;color:#aaa;margin:8px 0
+}
+.photo-upload-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.photo-upload-actions button{
+  border:0;background:var(--red);color:white;border-radius:8px;
+  padding:10px 13px;font-weight:bold;font-size:12px
+}
+.photo-upload-status{font-size:12px;color:#999;margin-top:7px;overflow-wrap:anywhere}
+.photo-upload-preview{
+  width:75px;height:75px;object-fit:contain;background:#222;
+  border:1px solid #444;border-radius:8px;margin-top:8px
+}
 @media(min-width:700px){
   #products{grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;padding:18px}
   .photo{height:230px}.hero{padding:60px 20px}
@@ -479,11 +497,18 @@ function normalizeProduct(p){
   if(typeof specs==="string"){
     try{specs=JSON.parse(specs)}catch(e){specs=null}
   }
+
+  const imageUrls=[
+    p.image_url,p.image_url_2,p.image_url_3,
+    p.image_url_4,p.image_url_5
+  ].map(safeImage);
+
   return {
     id:Number(p.id),name:p.name,cat:p.category||"accessory",
     desc:p.description||"",price:Number(p.price)||0,
     stock:Number(p.stock||0),
-    images:[p.image_url,p.image_url_2,p.image_url_3].map(safeImage).filter(Boolean),
+    imageUrls,
+    images:imageUrls.filter(Boolean),
     specs,emoji:emojis[p.category]||"🔊",
     is_active:p.is_active!==false,
     discount_percent:Number(p.discount_percent)||0,
@@ -856,6 +881,94 @@ async function adminRequest(action,extra={}){
   return result;
 }
 
+/* Загрузка фотографии в Storage через admin-api- */
+async function uploadProductImage(number){
+  if(!isAdmin()){
+    alert("Доступ запрещён.");
+    return;
+  }
+  if(!tg?.initData){
+    alert("Открой магазин через Telegram.");
+    return;
+  }
+
+  const fileInput=document.getElementById("edit-file"+number);
+  const status=document.getElementById("upload-status"+number);
+  const urlInput=document.getElementById("edit-image"+number);
+  const button=document.getElementById("upload-button"+number);
+  const file=fileInput?.files?.[0];
+
+  if(!file){
+    status.textContent="Сначала выбери фотографию.";
+    status.className="photo-upload-status admin-error";
+    return;
+  }
+
+  const allowedTypes=["image/jpeg","image/png","image/webp"];
+  if(!allowedTypes.includes(file.type)){
+    status.textContent="Поддерживаются JPG, PNG и WebP.";
+    status.className="photo-upload-status admin-error";
+    return;
+  }
+
+  if(file.size>5*1024*1024){
+    status.textContent="Файл больше 5 МБ. Выбери фотографию поменьше.";
+    status.className="photo-upload-status admin-error";
+    return;
+  }
+
+  const oldText=button.textContent;
+  button.disabled=true;
+  button.textContent="Загружаем...";
+  status.textContent="Загружаем фотографию в хранилище...";
+  status.className="photo-upload-status";
+
+  try{
+    const formData=new FormData();
+    formData.append("action","upload_image");
+    formData.append("file",file);
+
+    const response=await fetch(ADMIN_URL,{
+      method:"POST",
+      headers:{
+        "x-telegram-init-data":tg.initData
+      },
+      body:formData
+    });
+
+    const responseText=await response.text();
+    let result;
+
+    try{
+      result=JSON.parse(responseText);
+    }catch(e){
+      throw new Error("Сервер вернул непонятный ответ: "+responseText.slice(0,200));
+    }
+
+    if(!response.ok||result.success!==true||!result.url){
+      throw new Error(result.error||"Не удалось загрузить фотографию.");
+    }
+
+    urlInput.value=result.url;
+
+    const preview=document.getElementById("upload-preview"+number);
+    if(preview){
+      preview.src=result.url;
+      preview.style.display="block";
+    }
+
+    status.textContent="✓ Фотография загружена.";
+    status.className="photo-upload-status admin-success";
+  }catch(error){
+    console.error(error);
+    status.textContent="Ошибка: "+error.message;
+    status.className="photo-upload-status admin-error";
+  }finally{
+    button.disabled=false;
+    button.textContent=oldText;
+  }
+}
+
 function openAdmin(){
   if(!isAdmin()){alert("У вас нет доступа к админ-панели.");return}
   document.getElementById("catalog-page").style.display="none";
@@ -897,6 +1010,7 @@ function renderAdminProducts(){
           <b>${escapeHTML(p.name)}</b>
           <small>${money(p.price)} · Остаток: ${p.stock}</small>
           <small>${p.is_active?"Опубликован":"Скрыт"}${hasDiscount(p)?" · Скидка "+p.discount_percent+"%":""}</small>
+          <small>Фотографий: ${p.images.length} из 5</small>
         </div>
       </div>
       <div class="admin-actions">
@@ -911,8 +1025,8 @@ function newProduct(){
   editingId=null;
   renderEditor({
     name:"",desc:"",price:0,stock:0,cat:"sub",
-    images:[],specs:[],discount_percent:0,
-    discount_active:false,is_active:true
+    images:[],imageUrls:["","","","",""],specs:[],
+    discount_percent:0,discount_active:false,is_active:true
   });
 }
 function editProduct(id){
@@ -930,6 +1044,33 @@ function closeEditor(){
 function renderEditor(p){
   let specsText="[]";
   try{specsText=JSON.stringify(p.specs||[],null,2)}catch(e){}
+
+  const urls=p.imageUrls||[
+    p.images?.[0]||"",p.images?.[1]||"",p.images?.[2]||"",
+    p.images?.[3]||"",p.images?.[4]||""
+  ];
+
+  const photoFields=Array.from({length:5},(_,index)=>{
+    const number=index+1;
+    const url=urls[index]||"";
+    return `
+      <div class="photo-upload">
+        <div class="photo-upload-title">Фотография ${number} ${number===1?"(главная)":""}</div>
+        <div class="field">
+          <label>Ссылка на фото ${number}</label>
+          <input id="edit-image${number}" value="${escapeHTML(url)}" placeholder="https://...">
+        </div>
+        <label class="admin-hint" for="edit-file${number}">Или выбери фото из галереи iPhone</label>
+        <input id="edit-file${number}" type="file" accept="image/jpeg,image/png,image/webp">
+        <div class="photo-upload-actions">
+          <button type="button" id="upload-button${number}" onclick="uploadProductImage(${number})">Загрузить фото ${number}</button>
+        </div>
+        <div id="upload-status${number}" class="photo-upload-status"></div>
+        <img id="upload-preview${number}" class="photo-upload-preview"
+          src="${escapeHTML(url)}" alt="Предпросмотр"
+          style="display:${url?"block":"none"}">
+      </div>`;
+  }).join("");
 
   document.getElementById("admin-editor").innerHTML=`
     <div class="admin-card">
@@ -968,18 +1109,9 @@ function renderEditor(p){
         </select>
       </div>
 
-      <div class="field">
-        <label>Ссылка на первое фото</label>
-        <input id="edit-image1" value="${escapeHTML(p.images[0]||"")}" placeholder="https://...">
-      </div>
-      <div class="field">
-        <label>Ссылка на второе фото</label>
-        <input id="edit-image2" value="${escapeHTML(p.images[1]||"")}" placeholder="https://...">
-      </div>
-      <div class="field">
-        <label>Ссылка на третье фото</label>
-        <input id="edit-image3" value="${escapeHTML(p.images[2]||"")}" placeholder="https://...">
-      </div>
+      <h3 style="margin-top:20px">Фотографии товара</h3>
+      <div class="admin-hint">Можно добавить до 5 фотографий. Выбирай изображение из галереи и нажимай «Загрузить». После загрузки ссылка появится автоматически.</div>
+      ${photoFields}
 
       <div class="field">
         <label>Характеристики (JSON)</label>
@@ -1038,6 +1170,8 @@ async function saveProduct(){
     image_url:document.getElementById("edit-image1").value.trim(),
     image_url_2:document.getElementById("edit-image2").value.trim(),
     image_url_3:document.getElementById("edit-image3").value.trim(),
+    image_url_4:document.getElementById("edit-image4").value.trim(),
+    image_url_5:document.getElementById("edit-image5").value.trim(),
     specifications:specs,
     discount_percent:discount,
     discount_active:document.getElementById("edit-discount-active").checked,
