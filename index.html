@@ -2247,7 +2247,7 @@ window.addEventListener("scroll",function(){
   closeSpeakerMenu();
 },{passive:true});
 
-/* Надёжный запуск фонового видео в закреплённой шапке */
+/* Автозапуск фонового видео в закреплённой шапке — без запуска касанием */
 const headerVideo=document.querySelector(".header-video");
 if(headerVideo){
   headerVideo.muted=true;
@@ -2283,24 +2283,15 @@ if(headerVideo){
     }
   };
 
-  /* Повторяем попытку именно после готовности медиа и полной загрузки страницы */
   ["loadedmetadata","loadeddata","canplay","canplaythrough"].forEach(eventName=>{
     headerVideo.addEventListener(eventName,startHeaderVideo);
   });
   window.addEventListener("load",startHeaderVideo);
   window.addEventListener("pageshow",startHeaderVideo);
   document.addEventListener("visibilitychange",startHeaderVideo);
-
-  /* Несколько коротких повторов помогают, если Dropbox завершает перенаправление не сразу */
   [250,800,1800,3500].forEach(delay=>{
     window.setTimeout(startHeaderVideo,delay);
   });
-
-  /* Резервный запуск после первого касания, если браузер всё же запретил autoplay */
-  document.addEventListener("touchstart",startHeaderVideo,{once:true,passive:true});
-  document.addEventListener("pointerdown",startHeaderVideo,{once:true,passive:true});
-  document.addEventListener("click",startHeaderVideo,{once:true});
-
   startHeaderVideo();
 }
 
