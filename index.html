@@ -574,7 +574,7 @@ footer span{color:var(--red);font-weight:bold}
 <body>
 
 <header>
-  <video class="header-video" autoplay muted loop playsinline webkit-playsinline preload="metadata" aria-hidden="true">
+  <video class="header-video" autoplay muted loop playsinline webkit-playsinline preload="auto" aria-hidden="true">
     <source src="https://www.dropbox.com/scl/fi/x43w8sc8k46m9qy2kkkqj/PULSE_SOUND_dark_red.mov-rlkey-jhkvt7w44m8fm7oir2q9zqy6a-st-ztvugki5-dl-0.mp4?rlkey=qrnsnrt90xqjea0im3znq0l8z&raw=1" type="video/mp4">
   </video>
   <div class="header-video-overlay"></div>
@@ -2264,6 +2264,12 @@ if(headerVideo){
   };
   headerVideo.addEventListener("loadeddata",startHeaderVideo,{once:true});
   headerVideo.addEventListener("canplay",startHeaderVideo,{once:true});
+
+  /* iOS и Telegram могут разрешить воспроизведение только после первого касания */
+  document.addEventListener("touchstart",startHeaderVideo,{once:true,passive:true});
+  document.addEventListener("pointerdown",startHeaderVideo,{once:true,passive:true});
+  document.addEventListener("click",startHeaderVideo,{once:true});
+
   startHeaderVideo();
 }
 
