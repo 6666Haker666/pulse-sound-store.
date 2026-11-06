@@ -2247,25 +2247,43 @@ window.addEventListener("scroll",function(){
   closeSpeakerMenu();
 },{passive:true});
 
-/* Запуск видео в закреплённой шапке */
+/* Надёжный запуск фонового видео в закреплённой шапке */
 const headerVideo=document.querySelector(".header-video");
 if(headerVideo){
   headerVideo.muted=true;
   headerVideo.defaultMuted=true;
+  headerVideo.loop=true;
   headerVideo.playsInline=true;
+  headerVideo.autoplay=true;
   headerVideo.setAttribute("muted","");
+  headerVideo.setAttribute("autoplay","");
+  headerVideo.setAttribute("loop","");
   headerVideo.setAttribute("playsinline","");
   headerVideo.setAttribute("webkit-playsinline","");
+
+  let headerPlayPending=false;
   const startHeaderVideo=()=>{
+    if(document.visibilityState==="hidden" || !headerVideo.paused || headerPlayPending) return;
+    headerPlayPending=true;
     const playback=headerVideo.play();
-    if(playback&&typeof playback.catch==="function"){
-      playback.catch(()=>{});
+    if(playback&&typeof playback.then==="function"){
+      playback.then(()=>{
+        headerPlayPending=false;
+      }).catch(()=>{
+        headerPlayPending=false;
+      });
+    }else{
+      headerPlayPending=false;
     }
   };
-  headerVideo.addEventListener("loadeddata",startHeaderVideo,{once:true});
-  headerVideo.addEventListener("canplay",startHeaderVideo,{once:true});
 
-  /* iOS и Telegram могут разрешить воспроизведение только после первого касания */
+  ["loadedmetadata","loadeddata","canplay"].forEach(eventName=>{
+    headerVideo.addEventListener(eventName,startHeaderVideo);
+  });
+  window.addEventListener("pageshow",startHeaderVideo);
+  document.addEventListener("visibilitychange",startHeaderVideo);
+
+  /* Резервный запуск после первого касания, если WebView запретил autoplay */
   document.addEventListener("touchstart",startHeaderVideo,{once:true,passive:true});
   document.addEventListener("pointerdown",startHeaderVideo,{once:true,passive:true});
   document.addEventListener("click",startHeaderVideo,{once:true});
