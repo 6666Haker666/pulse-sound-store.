@@ -33,15 +33,24 @@ header{
 }
 
 /* Видео-фон закреплённой шапки Pulse Sound */
-header{overflow:hidden;background:rgba(9,9,9,.18)}
+header{
+  overflow:hidden;
+  isolation:isolate;
+  background:rgba(9,9,9,.08);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none
+}
 .header-video{
-  position:absolute;inset:0;width:100%;height:100%;
+  display:block;
+  position:absolute;top:0;left:0;width:100%;height:100%;
   object-fit:cover;object-position:center;
-  pointer-events:none;z-index:0
+  pointer-events:none;z-index:0;
+  opacity:1;visibility:visible;
+  background:transparent
 }
 .header-video-overlay{
   position:absolute;inset:0;
-  background:linear-gradient(90deg,rgba(0,0,0,.58),rgba(0,0,0,.34) 55%,rgba(0,0,0,.52));
+  background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(0,0,0,.12) 55%,rgba(0,0,0,.22));
   pointer-events:none;z-index:1
 }
 header>.logo,header>.header-right{position:relative;z-index:2}
@@ -2238,7 +2247,27 @@ window.addEventListener("scroll",function(){
   closeSpeakerMenu();
 },{passive:true});
 
-/* Запуск */
+/* Запуск видео в закреплённой шапке */
+const headerVideo=document.querySelector(".header-video");
+if(headerVideo){
+  headerVideo.muted=true;
+  headerVideo.defaultMuted=true;
+  headerVideo.playsInline=true;
+  headerVideo.setAttribute("muted","");
+  headerVideo.setAttribute("playsinline","");
+  headerVideo.setAttribute("webkit-playsinline","");
+  const startHeaderVideo=()=>{
+    const playback=headerVideo.play();
+    if(playback&&typeof playback.catch==="function"){
+      playback.catch(()=>{});
+    }
+  };
+  headerVideo.addEventListener("loadeddata",startHeaderVideo,{once:true});
+  headerVideo.addEventListener("canplay",startHeaderVideo,{once:true});
+  startHeaderVideo();
+}
+
+/* Запуск магазина */
 updateCart();
 loadProducts();
 </script>
