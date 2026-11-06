@@ -528,6 +528,7 @@ footer span{color:var(--red);font-weight:bold}
 .payment-admin-actions .confirm-payment{background:#17652a}
 .payment-admin-actions .reject-payment{background:#541b1b}
 
+.order-admin-card{border:1px solid #383838;border-radius:12px;padding:14px;margin:12px 0;background:#111}.order-admin-head{display:flex;justify-content:space-between;gap:10px}.order-admin-status{font-size:12px;color:#ffca75;font-weight:bold}.order-admin-status.processing,.order-admin-status.shipped,.order-admin-status.completed{color:#8edb91}.order-admin-status.cancelled,.order-admin-status.refunded{color:#ff7777}.order-admin-meta{color:#aaa;font-size:12px;line-height:1.6;margin:8px 0}.order-admin-items{padding:10px;background:#0c0c0c;border:1px solid #303030;border-radius:9px;font-size:13px;line-height:1.65}.order-admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.order-admin-actions button{border:1px solid #484848;border-radius:8px;padding:9px 11px;background:#292929;color:#fff;font-size:12px}.order-admin-actions .positive{background:#17552a}.order-admin-actions .negative{background:#4a1919}
 @media(min-width:700px){
   #products{grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;padding:18px}
   .photo{height:230px}.hero{padding:60px 20px}
@@ -632,6 +633,9 @@ footer span{color:var(--red);font-weight:bold}
 
   <h2 class="section-title" style="padding:0;margin-top:28px">Платежи и подтверждения</h2>
   <div id="admin-payments"><div class="empty">Загрузка...</div></div>
+<h2 class="section-title" style="padding:0;margin-top:28px">Заказы и выполнение</h2>
+  <p class="admin-hint">Оплата подтверждается отдельно. После подтверждения заказ перейдёт в обработку. Здесь отмечается отправка, завершение, отмена и возврат.</p>
+  <div id="admin-orders"><div class="empty">Загрузка заказов...</div></div>
 </main>
 
 <div id="lightbox" onclick="closeLightbox()">
@@ -1823,7 +1827,7 @@ async function loadAdmin(){
     const result=await adminRequest("list");
     adminItems=(result.products||[]).map(normalizeProduct);
     renderAdminProducts();
-    await loadPaymentAdmin();
+    await Promise.all([loadPaymentAdmin(),loadOrdersAdmin()]);
   }catch(error){
     box.innerHTML=`<div class="empty error-text">${escapeHTML(error.message)}</div>`;
   }
@@ -1871,6 +1875,41 @@ async function loadPaymentAdmin(){
     if(box)box.innerHTML=`<div class="empty error-text">${escapeHTML(error.message)}</div>`;
     if(message)message.textContent=error.message;
   }
+}
+
+
+const ORDER_STATUS_LABELS={new:"Новый",awaiting_payment:"Ожидает оплаты",processing:"В обработке",shipped:"Отправлен",completed:"Завершён",cancelled:"Отменён",refund_requested:"Запрошен возврат",refunded:"Возврат оформлен"};
+const PAYMENT_STATUS_LABELS={pending:"Ожидает перевода",reported:"Покупатель сообщил об оплате",paid:"Оплата подтверждена",rejected:"Платёж отклонён"};
+async function loadOrdersAdmin(){
+ const box=document.getElementById("admin-orders"); if(!box)return;
+ box.innerHTML='<div class="empty">Загружаем заказы...</div>';
+ try{
+  const result=await adminRequest("orders_list"),orders=result.orders||[];
+  if(!orders.length){box.innerHTML='<div class="empty">Заказов пока нет.</div>';return;}
+  box.innerHTML=orders.map(order=>{
+   const status=String(order.status||"new"),payment=order.payment||null,paymentStatus=payment?String(payment.status||"pending"):"нет записи";
+   const lines=(order.items||[]).map(item=>escapeHTML(item.product_name)+" × "+Number(item.quantity)+" — "+money(Number(item.price)*Number(item.quantity))).join("<br>");
+   let actions="";
+   const button=(label,next,kind)=>'<button class="'+kind+'" onclick=\'setOrderStatus('+Number(order.id)+','+JSON.stringify(next)+')\'>'+label+'</button>';
+   if(status==="processing")actions=button("Отметить отправку","shipped","positive")+button("Завершить заказ","completed","")+button("Запрос возврата","refund_requested","negative");
+   else if(status==="shipped")actions=button("Завершить заказ","completed","positive")+button("Запрос возврата","refund_requested","negative");
+   else if(status==="completed")actions=button("Запрос возврата","refund_requested","negative");
+   else if(status==="refund_requested")actions=button("Подтвердить возврат","refunded","positive");
+   else if(status==="new"||status==="awaiting_payment")actions=button("Отменить заказ","cancelled","negative");
+   return '<div class="order-admin-card"><div class="order-admin-head"><b>Заказ №'+escapeHTML(order.id)+'</b><span class="order-admin-status '+escapeHTML(status)+'">'+escapeHTML(ORDER_STATUS_LABELS[status]||status)+'</span></div>'+
+   '<div class="order-admin-meta">'+escapeHTML(order.customer_name||"")+' · '+escapeHTML(order.phone||"")+'<br>'+escapeHTML(order.address||"")+'<br>'+escapeHTML(order.delivery_method||"")+'<br>'+escapeHTML(order.created_at||"")+'</div>'+
+   '<div class="order-admin-items">'+(lines||"Состав заказа не найден")+'</div>'+
+   '<div class="order-admin-meta">Товары: '+money(order.subtotal)+' · Доставка: '+money(order.delivery)+'<br><b>Итого: '+money(order.total)+'</b><br>Оплата: '+escapeHTML(PAYMENT_STATUS_LABELS[paymentStatus]||paymentStatus)+(payment&&payment.method?(" · "+(payment.method==="sbp"?"СБП":"Карта")):"")+'</div>'+
+   (order.comment?'<div class="order-admin-meta">Комментарий: '+escapeHTML(order.comment)+'</div>':"")+
+   (actions?'<div class="order-admin-actions">'+actions+'</div>':"")+'</div>';
+  }).join("");
+ }catch(error){box.innerHTML='<div class="empty error-text">'+escapeHTML(error.message)+'</div>';}
+}
+async function setOrderStatus(orderId,status){
+ const labels={shipped:"отметить заказ отправленным",completed:"завершить заказ",cancelled:"отменить заказ",refund_requested:"оформить запрос на возврат",refunded:"подтвердить возврат"};
+ if(!confirm("Точно "+(labels[status]||"изменить статус")+" №"+orderId+"?"))return;
+ try{await adminRequest("order_set_status",{order_id:orderId,status});await loadOrdersAdmin();await loadProducts();}
+ catch(error){alert(error.message);}
 }
 
 async function savePaymentSettings(){
