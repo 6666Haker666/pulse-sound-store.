@@ -2265,7 +2265,13 @@ if(headerVideo){
   const startHeaderVideo=()=>{
     if(document.visibilityState==="hidden" || !headerVideo.paused || headerPlayPending) return;
     headerPlayPending=true;
-    const playback=headerVideo.play();
+    let playback;
+    try{
+      playback=headerVideo.play();
+    }catch(error){
+      headerPlayPending=false;
+      return;
+    }
     if(playback&&typeof playback.then==="function"){
       playback.then(()=>{
         headerPlayPending=false;
@@ -2277,13 +2283,20 @@ if(headerVideo){
     }
   };
 
-  ["loadedmetadata","loadeddata","canplay"].forEach(eventName=>{
+  /* Повторяем попытку именно после готовности медиа и полной загрузки страницы */
+  ["loadedmetadata","loadeddata","canplay","canplaythrough"].forEach(eventName=>{
     headerVideo.addEventListener(eventName,startHeaderVideo);
   });
+  window.addEventListener("load",startHeaderVideo);
   window.addEventListener("pageshow",startHeaderVideo);
   document.addEventListener("visibilitychange",startHeaderVideo);
 
-  /* Резервный запуск после первого касания, если WebView запретил autoplay */
+  /* Несколько коротких повторов помогают, если Dropbox завершает перенаправление не сразу */
+  [250,800,1800,3500].forEach(delay=>{
+    window.setTimeout(startHeaderVideo,delay);
+  });
+
+  /* Резервный запуск после первого касания, если браузер всё же запретил autoplay */
   document.addEventListener("touchstart",startHeaderVideo,{once:true,passive:true});
   document.addEventListener("pointerdown",startHeaderVideo,{once:true,passive:true});
   document.addEventListener("click",startHeaderVideo,{once:true});
