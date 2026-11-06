@@ -511,6 +511,23 @@ footer span{color:var(--red);font-weight:bold}
 .photo-remove-button:disabled{opacity:.5}
 .photo-remove-hint{color:#ff7777;font-size:11px;margin-top:7px;display:none}
 
+
+/* Оплата и ручное подтверждение */
+.payment-help{font-size:12px;color:#aaa;line-height:1.55;margin:10px 0}
+.payment-data{background:#101010;border:1px solid #383838;border-radius:11px;padding:13px;margin:12px 0;overflow-wrap:anywhere}
+.payment-data b{color:#fff}
+.payment-data .payment-value{font-size:17px;font-weight:900;letter-spacing:.4px;color:#ff5555;margin-top:5px}
+.payment-method-label{display:flex;align-items:center;gap:9px;padding:11px;border:1px solid #414141;border-radius:9px;background:#101010;margin:8px 0}
+.payment-method-label input{accent-color:var(--red);width:18px;height:18px}
+.payment-admin-row{border:1px solid #383838;border-radius:10px;padding:12px;margin:10px 0;background:#101010}
+.payment-status{font-size:12px;color:#ffca75;margin-top:5px}
+.payment-status.paid{color:#8edb91}
+.payment-status.reported{color:#ffca75}
+.payment-admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.payment-admin-actions button{border:0;border-radius:8px;padding:10px 12px;background:#292929;color:#fff}
+.payment-admin-actions .confirm-payment{background:#17652a}
+.payment-admin-actions .reject-payment{background:#541b1b}
+
 @media(min-width:700px){
   #products{grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;padding:18px}
   .photo{height:230px}.hero{padding:60px 20px}
@@ -596,6 +613,25 @@ footer span{color:var(--red);font-weight:bold}
   <div id="admin-editor"></div>
   <h2 class="section-title" style="padding:0;margin-top:24px">Товары магазина</h2>
   <div id="admin-products"><div class="empty">Загрузка...</div></div>
+
+  <h2 class="section-title" style="padding:0;margin-top:28px">Настройки оплаты</h2>
+  <div class="admin-card">
+    <p class="admin-hint">Реквизиты вводятся здесь и не хранятся в публичном HTML. Включай только те способы, которые настроил.</p>
+    <label class="admin-check"><input type="checkbox" id="pay-card-enabled"> Принимать перевод на карту</label>
+    <div class="field"><label>Номер карты</label><input id="pay-card-number" inputmode="numeric" placeholder="0000 0000 0000 0000"></div>
+    <div class="field"><label>Получатель</label><input id="pay-card-holder" placeholder="Имя получателя"></div>
+    <div class="field"><label>Банк карты</label><input id="pay-card-bank" placeholder="Название банка"></div>
+    <label class="admin-check"><input type="checkbox" id="pay-sbp-enabled"> Принимать через СБП</label>
+    <div class="field"><label>Телефон для СБП (если используешь)</label><input id="pay-sbp-phone" type="tel" placeholder="+7..."></div>
+    <div class="field"><label>Банк получателя СБП</label><input id="pay-sbp-bank" placeholder="Название банка"></div>
+    <div class="field"><label>Ссылка на QR-код СБП (необязательно)</label><input id="pay-sbp-qr" type="url" placeholder="https://..."></div>
+    <div class="field"><label>Инструкция покупателю</label><textarea id="pay-instructions" placeholder="Укажи назначение платежа или дополнительные условия"></textarea></div>
+    <button class="admin-primary" onclick="savePaymentSettings()">Сохранить настройки оплаты</button>
+    <div id="payment-settings-message" class="admin-hint"></div>
+  </div>
+
+  <h2 class="section-title" style="padding:0;margin-top:28px">Платежи и подтверждения</h2>
+  <div id="admin-payments"><div class="empty">Загрузка...</div></div>
 </main>
 
 <div id="lightbox" onclick="closeLightbox()">
@@ -649,10 +685,29 @@ footer span{color:var(--red);font-weight:bold}
         <label for="customer-comment">Комментарий</label>
         <textarea id="customer-comment" placeholder="Дополнительная информация"></textarea>
       </div>
+      <div class="field">
+        <label for="payment-method">Способ оплаты</label>
+        <select id="payment-method" required>
+          <option value="">Загрузка способов оплаты...</option>
+        </select>
+        <p class="payment-help">После оформления заказа появятся реквизиты. Оплата будет подтверждена вручную после проверки поступления денег.</p>
+      </div>
       <div class="order-summary" id="order-summary"><h3>Ваш заказ</h3></div>
       <button class="checkout" type="submit">Подтвердить заказ</button>
       <p class="delivery-note">При доставке в другой город стоимость будет согласована отдельно.</p>
     </form>
+  </div>
+</div>
+
+<div class="modal" id="payment-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Оплата заказа</h2>
+      <button class="close" onclick="closePayment()">×</button>
+    </div>
+    <div id="payment-content"></div>
+    <button class="checkout" id="payment-claim-button" onclick="claimPayment()">Я оплатил</button>
+    <p class="payment-help">Нажатие этой кнопки только отправляет уведомление владельцу. Заказ станет оплаченным только после ручной проверки поступления денег.</p>
   </div>
 </div>
 
@@ -678,6 +733,8 @@ let detailProductId=null;
 let detailPhotoIndex=0;
 let adminItems=[];
 let editingId=null;
+let paymentSettingsCache=null;
+let activePayment=null;
 
 let edgeSwipeStartX=null;
 let edgeSwipeStartY=null;
@@ -1381,6 +1438,120 @@ function openOrder(){
 }
 function closeOrder(){document.getElementById("order-modal").style.display="none"}
 
+async function fetchPaymentSettings(){
+  const response=await fetch(ORDER_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:"payment_settings"})
+  });
+  const result=await response.json();
+  if(!response.ok||!result.success)throw new Error(result.error||"Не удалось загрузить способы оплаты.");
+  paymentSettingsCache=result.settings||{};
+  return paymentSettingsCache;
+}
+
+async function refreshPaymentMethods(){
+  const select=document.getElementById("payment-method");
+  select.innerHTML='<option value="">Загружаем...</option>';
+  try{
+    const settings=await fetchPaymentSettings();
+    const options=[];
+    if(settings.card_enabled)options.push('<option value="card">Перевод на карту</option>');
+    if(settings.sbp_enabled)options.push('<option value="sbp">СБП</option>');
+    if(!options.length){
+      select.innerHTML='<option value="">Оплата пока не настроена</option>';
+      throw new Error("Владелец пока не включил способы оплаты. Попробуйте позже.");
+    }
+    select.innerHTML=options.join("");
+  }catch(error){
+    select.innerHTML='<option value="">Способы оплаты недоступны</option>';
+    console.error(error);
+    alert(error.message);
+  }
+}
+
+async function openOrder(){
+  if(!cart.length){alert("Корзина пустая");return}
+  closeCart();
+  document.getElementById("order-modal").style.display="block";
+  calculateOrder();
+  await refreshPaymentMethods();
+}
+
+function closePayment(){
+  document.getElementById("payment-modal").style.display="none";
+}
+
+function showPayment(result){
+  activePayment={
+    orderId:result.order_id,
+    token:result.claim_token,
+    amount:Number(result.total)||0,
+    method:result.payment_method,
+    settings:result.payment_settings||{}
+  };
+  const p=activePayment;
+  const s=p.settings;
+  let details="";
+  if(p.method==="card"){
+    details=`
+      <div class="payment-data"><b>Перевод на карту</b>
+        <div class="payment-value">${escapeHTML(s.card_number||"Реквизиты не настроены")}</div>
+        <div class="payment-help">Получатель: ${escapeHTML(s.card_holder||"")}</div>
+        <div class="payment-help">Банк: ${escapeHTML(s.card_bank||"")}</div>
+      </div>`;
+  }else{
+    details=`
+      <div class="payment-data"><b>Оплата через СБП</b>
+        ${s.sbp_qr_url?`<img src="${escapeHTML(s.sbp_qr_url)}" alt="QR-код СБП" style="display:block;width:100%;max-width:260px;margin:12px auto;border-radius:10px">`:""}
+        <div class="payment-value">${escapeHTML(s.sbp_phone||"")}</div>
+        <div class="payment-help">Банк получателя: ${escapeHTML(s.sbp_bank||"")}</div>
+      </div>`;
+  }
+  document.getElementById("payment-content").innerHTML=`
+    <div class="order-summary">
+      <h3>Заказ №${escapeHTML(p.orderId)}</h3>
+      <div class="order-total">${money(p.amount)}</div>
+    </div>
+    ${details}
+    ${s.instructions?`<div class="payment-data">${escapeHTML(s.instructions)}</div>`:""}
+    <p class="payment-help">После перевода нажми «Я оплатил». Не указывай чужую сумму. Если доставка в другой город, её стоимость может быть согласована отдельно.</p>`;
+  document.getElementById("payment-claim-button").disabled=false;
+  document.getElementById("payment-claim-button").textContent="Я оплатил";
+  document.getElementById("payment-modal").style.display="block";
+}
+
+async function claimPayment(){
+  if(!activePayment?.orderId||!activePayment?.token)return;
+  const button=document.getElementById("payment-claim-button");
+  button.disabled=true;
+  button.textContent="Отправляем уведомление...";
+  try{
+    const response=await fetch(ORDER_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        action:"claim_payment",
+        order_id:activePayment.orderId,
+        claim_token:activePayment.token
+      })
+    });
+    const result=await response.json();
+    if(!response.ok||!result.success)throw new Error(result.error||"Не удалось отправить уведомление.");
+    button.textContent="Уведомление отправлено";
+    button.disabled=true;
+    const note=document.createElement("p");
+    note.className="payment-help";
+    note.textContent="Владелец получил уведомление. Статус оплаты изменится после ручной проверки.";
+    document.getElementById("payment-content").appendChild(note);
+    activePayment.token=null;
+  }catch(error){
+    alert(error.message);
+    button.disabled=false;
+    button.textContent="Я оплатил";
+  }
+}
+
 function calculateOrder(){
   const summary=document.getElementById("order-summary");
   const method=document.getElementById("delivery-method");
@@ -1428,6 +1599,7 @@ document.getElementById("order-form").addEventListener("submit",async function(e
     name,phone,address,comment,
     deliveryMethod:method==="local"?"Доставка по городу":"Доставка в другой город",
     delivery:method==="local"?300:0,
+    paymentMethod:document.getElementById("payment-method").value,
     items:cart.map(p=>({product_id:p.id,quantity:p.qty}))
   };
 
@@ -1452,13 +1624,16 @@ document.getElementById("order-form").addEventListener("submit",async function(e
       throw new Error(result.error||"Не удалось отправить заказ. Код: "+response.status);
     }
 
-    alert("Заказ №"+(result.order_id||"")+" успешно оформлен! Скоро с вами свяжутся.");
+    if(!result.claim_token||!result.payment_settings){
+      throw new Error("Заказ создан, но сервер не вернул данные оплаты. Свяжитесь с владельцем магазина.");
+    }
     cart=[];
     updateCart();
     refreshCartControls();
     this.reset();
     calculateOrder();
     closeOrder();
+    showPayment(result);
     await loadProducts();
   }catch(error){
     console.error(error);
@@ -1648,9 +1823,96 @@ async function loadAdmin(){
     const result=await adminRequest("list");
     adminItems=(result.products||[]).map(normalizeProduct);
     renderAdminProducts();
+    await loadPaymentAdmin();
   }catch(error){
     box.innerHTML=`<div class="empty error-text">${escapeHTML(error.message)}</div>`;
   }
+}
+
+async function loadPaymentAdmin(){
+  const message=document.getElementById("payment-settings-message");
+  const box=document.getElementById("admin-payments");
+  try{
+    const [settingsResult,paymentsResult]=await Promise.all([
+      adminRequest("payment_settings_get"),
+      adminRequest("payments_list")
+    ]);
+    const s=settingsResult.settings||{};
+    document.getElementById("pay-card-enabled").checked=!!s.card_enabled;
+    document.getElementById("pay-card-number").value=s.card_number||"";
+    document.getElementById("pay-card-holder").value=s.card_holder||"";
+    document.getElementById("pay-card-bank").value=s.card_bank||"";
+    document.getElementById("pay-sbp-enabled").checked=!!s.sbp_enabled;
+    document.getElementById("pay-sbp-phone").value=s.sbp_phone||"";
+    document.getElementById("pay-sbp-bank").value=s.sbp_bank||"";
+    document.getElementById("pay-sbp-qr").value=s.sbp_qr_url||"";
+    document.getElementById("pay-instructions").value=s.instructions||"";
+    const records=paymentsResult.payments||[];
+    if(!records.length){
+      box.innerHTML='<div class="empty">Платежей пока нет.</div>';
+      return;
+    }
+    box.innerHTML=records.map(p=>{
+      const statusLabels={pending:"Ожидает оплаты",reported:"Покупатель сообщил об оплате",paid:"Оплата подтверждена",rejected:"Отклонено"};
+      const status=p.status||"pending";
+      return `<div class="payment-admin-row">
+        <b>Заказ №${escapeHTML(p.order_id)}</b>
+        <div>${money(p.amount)} · ${p.method==="sbp"?"СБП":"Перевод на карту"}</div>
+        <div>${escapeHTML(p.customer_name||"")} · ${escapeHTML(p.phone||"")}</div>
+        <div class="payment-status ${escapeHTML(status)}">${escapeHTML(statusLabels[status]||status)}</div>
+        <small class="admin-hint">${escapeHTML(p.created_at||"")}</small>
+        ${status==="reported"?`<div class="payment-admin-actions">
+          <button class="confirm-payment" onclick="setPaymentStatus('${escapeHTML(p.order_id)}','paid')">Подтвердить оплату</button>
+          <button class="reject-payment" onclick="setPaymentStatus('${escapeHTML(p.order_id)}','rejected')">Отклонить</button>
+        </div>`:""}
+      </div>`;
+    }).join("");
+  }catch(error){
+    if(box)box.innerHTML=`<div class="empty error-text">${escapeHTML(error.message)}</div>`;
+    if(message)message.textContent=error.message;
+  }
+}
+
+async function savePaymentSettings(){
+  const message=document.getElementById("payment-settings-message");
+  const settings={
+    card_enabled:document.getElementById("pay-card-enabled").checked,
+    card_number:document.getElementById("pay-card-number").value.trim(),
+    card_holder:document.getElementById("pay-card-holder").value.trim(),
+    card_bank:document.getElementById("pay-card-bank").value.trim(),
+    sbp_enabled:document.getElementById("pay-sbp-enabled").checked,
+    sbp_phone:document.getElementById("pay-sbp-phone").value.trim(),
+    sbp_bank:document.getElementById("pay-sbp-bank").value.trim(),
+    sbp_qr_url:document.getElementById("pay-sbp-qr").value.trim(),
+    instructions:document.getElementById("pay-instructions").value.trim()
+  };
+  if(settings.card_enabled&&!settings.card_number){
+    message.textContent="Укажи номер карты или отключи перевод на карту.";
+    message.className="admin-error";return;
+  }
+  if(settings.sbp_enabled&&!settings.sbp_phone&&!settings.sbp_qr_url){
+    message.textContent="Укажи телефон СБП или ссылку на QR-код.";
+    message.className="admin-error";return;
+  }
+  message.textContent="Сохраняем...";
+  try{
+    await adminRequest("payment_settings_save",{settings});
+    message.className="admin-success";
+    message.textContent="Настройки оплаты сохранены.";
+    paymentSettingsCache=null;
+  }catch(error){
+    message.className="admin-error";
+    message.textContent=error.message;
+  }
+}
+
+async function setPaymentStatus(orderId,status){
+  const label=status==="paid"?"подтвердить оплату":"отклонить оплату";
+  if(!confirm("Точно "+label+" по заказу №"+orderId+"?"))return;
+  try{
+    await adminRequest("payment_set_status",{order_id:orderId,status});
+    await loadPaymentAdmin();
+  }catch(error){alert(error.message)}
 }
 
 function renderAdminProducts(){
@@ -1898,6 +2160,7 @@ async function deleteProduct(id){
 window.addEventListener("click",function(e){
   if(e.target.id==="cart-modal")closeCart();
   if(e.target.id==="order-modal")closeOrder();
+  if(e.target.id==="payment-modal")closePayment();
   if(e.target.id==="lightbox")closeLightbox();
 
   const speakerWrap=document.querySelector(".category-wrap");
