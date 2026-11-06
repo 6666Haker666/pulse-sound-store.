@@ -1950,7 +1950,7 @@ async function setPaymentStatus(orderId,status){
   if(!confirm("Точно "+label+" по заказу №"+orderId+"?"))return;
   try{
     await adminRequest("payment_set_status",{order_id:orderId,status});
-    await loadPaymentAdmin();
+    await Promise.all([loadPaymentAdmin(),loadOrdersAdmin(),loadProducts()]);
   }catch(error){alert(error.message)}
 }
 
