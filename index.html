@@ -570,6 +570,52 @@ footer span{color:var(--red);font-weight:bold}
   #products{grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;padding:18px}
   .photo{height:230px}.hero{padding:60px 20px}
 }
+
+/* Полноценная desktop-версия Pulse Sound Store */
+@media(min-width:900px){
+  body{background:radial-gradient(ellipse at 50% -220px,rgba(237,41,41,.10),transparent 650px),#080808;min-height:100vh}
+  header{min-height:76px;padding:12px max(34px,calc((100vw - 1320px)/2));box-shadow:0 8px 30px rgba(0,0,0,.32)}
+  .logo{font-size:25px;letter-spacing:1.6px}
+  .cart-button{padding:12px 19px;font-size:14px}
+  #catalog-page{padding-top:76px}
+  .hero{width:calc(100% - 64px);max-width:1320px;margin:24px auto 0;padding:76px 30px 62px;border:1px solid #292929;border-radius:20px;box-shadow:0 22px 65px rgba(0,0,0,.32)}
+  .hero h1{font-size:clamp(42px,4vw,58px);letter-spacing:5px;margin-bottom:15px}
+  .hero p{font-size:16px;letter-spacing:1px}
+  .hero-line{width:min(420px,55%);height:55px;margin-top:24px}
+  .categories{max-width:1320px;margin:0 auto;padding:25px 20px 20px;justify-content:flex-start;gap:12px;overflow:visible}
+  .category{font-size:14px;padding:12px 19px}
+  .section-title{max-width:1320px;margin:14px auto 4px;padding:0 20px;font-size:26px;letter-spacing:.2px}
+  #products{width:100%;max-width:1320px;margin:0 auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;padding:20px}
+  .product{border-radius:17px;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+  .product:hover{transform:translateY(-5px);border-color:#633030;box-shadow:0 16px 36px rgba(0,0,0,.38),0 0 0 1px rgba(237,41,41,.08)}
+  .photo{height:260px}
+  .info{padding:17px}
+  .info h3{font-size:17px;line-height:1.4}
+  .description{font-size:13px;min-height:38px}
+  .price{font-size:22px}
+  .add{font-size:13px;padding:13px 12px}
+  footer{max-width:1320px;margin:36px auto 0;padding:30px 20px}
+  #product-detail{max-width:1050px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:start;column-gap:34px}
+  #product-page{padding:100px max(34px,calc((100vw - 1120px)/2)) 145px}
+  #product-detail .detail-photo{grid-column:1;grid-row:1 / span 5;height:520px}
+  #product-detail .detail-title,#product-detail .detail-price,#product-detail .stock,#product-detail .detail-section{grid-column:2}
+  #product-detail .detail-title{margin-top:4px;font-size:34px}
+  #product-detail .detail-price{font-size:34px}
+  #detail-purchase-bar{padding:14px 30px}
+  .detail-purchase-inner{max-width:1050px}
+  #admin-page{max-width:1050px;padding:100px 28px 40px}
+  .admin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .modal-content{max-width:520px;margin:7vh auto}
+}
+@media(min-width:700px) and (max-width:899px){
+  header{padding-left:24px;padding-right:24px}
+  #catalog-page{padding-top:68px}
+  .hero{padding:58px 24px}
+  .categories{justify-content:center;flex-wrap:wrap;overflow:visible}
+  #products{max-width:900px;margin:0 auto;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:18px}
+  .photo{height:220px}
+}
+
 @media(max-width:390px){
   #products{gap:9px;padding:9px}.photo{height:180px}
   .info{padding:10px}.info h3{font-size:14px}
