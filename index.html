@@ -2271,8 +2271,11 @@ if(headerVideo){
   headerVideo.setAttribute("webkit-playsinline","");
 
   let headerPlayPending=false;
-  const startHeaderVideo=()=>{
-    if(document.visibilityState==="hidden" || !headerVideo.paused || headerPlayPending) return;
+  const startHeaderVideo=(fromUserGesture=false)=>{
+    if(document.visibilityState==="hidden" || !headerVideo.paused) return;
+    /* Не блокируем жест пользователя из-за незавершённого autoplay-запроса */
+    if(headerPlayPending && !fromUserGesture) return;
+    if(fromUserGesture) headerPlayPending=false;
     headerPlayPending=true;
     let playback;
     try{
@@ -2306,9 +2309,9 @@ if(headerVideo){
   });
 
   /* Резервный запуск после первого касания, если браузер всё же запретил autoplay */
-  document.addEventListener("touchstart",startHeaderVideo,{once:true,passive:true});
-  document.addEventListener("pointerdown",startHeaderVideo,{once:true,passive:true});
-  document.addEventListener("click",startHeaderVideo,{once:true});
+  document.addEventListener("touchstart",()=>startHeaderVideo(true),{once:true,passive:true});
+  document.addEventListener("pointerdown",()=>startHeaderVideo(true),{once:true,passive:true});
+  document.addEventListener("click",()=>startHeaderVideo(true),{once:true});
 
   startHeaderVideo();
 }
