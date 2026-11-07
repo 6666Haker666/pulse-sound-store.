@@ -469,6 +469,9 @@ header>.logo,header>.header-right{position:relative;z-index:2}
 .delivery-note{font-size:12px;color:#999;line-height:1.5;margin-top:10px}
 
 /* Красное предупреждение о доставке */
+.other-city-fields{display:none;margin:12px 0 0}
+.other-city-custom{width:100%;padding:13px;border:1px solid #414141;border-radius:9px;background:#090909;color:white;font-size:15px;outline:none}
+.other-city-custom:focus{border-color:var(--red);box-shadow:0 0 0 2px rgba(237,41,41,.12)}
 .delivery-warning{
   color:#ff3535;
   font-size:13px;
@@ -775,13 +778,41 @@ footer span{color:var(--red);font-weight:bold}
           <option value="other">Доставка в другой город — стоимость уточним</option>
         </select>
 
+        <div class="field other-city-fields" id="other-city-fields">
+          <label for="delivery-city">Город доставки</label>
+          <select id="delivery-city">
+            <option value="">Выберите город</option>
+            <optgroup label="Дагестан">
+              <option>Махачкала</option><option>Дербент</option><option>Каспийск</option>
+              <option>Избербаш</option><option>Хасавюрт</option><option>Буйнакск</option>
+              <option>Кизляр</option><option>Кизилюрт</option><option>Дагестанские Огни</option>
+              <option>Южно-Сухокумск</option><option>Хунзах</option><option>Карабудахкент</option>
+            </optgroup>
+            <optgroup label="Другие города России">
+              <option>Москва</option><option>Санкт-Петербург</option><option>Астрахань</option>
+              <option>Ставрополь</option><option>Краснодар</option><option>Ростов-на-Дону</option>
+              <option>Волгоград</option><option>Грозный</option><option>Назрань</option>
+              <option>Владикавказ</option><option>Черкесск</option><option>Нальчик</option>
+              <option>Элиста</option><option>Сочи</option><option>Туапсе</option>
+              <option>Новосибирск</option><option>Екатеринбург</option><option>Казань</option>
+              <option>Самара</option><option>Уфа</option><option>Пермь</option>
+              <option>Челябинск</option><option>Тюмень</option><option>Омск</option>
+              <option>Красноярск</option><option>Иркутск</option><option>Воронеж</option>
+              <option>Саратов</option><option>Пенза</option><option>Белгород</option>
+              <option>Курск</option><option>Липецк</option><option>Тамбов</option>
+              <option>Другой город</option>
+            </optgroup>
+          </select>
+          <input id="delivery-city-custom" class="other-city-custom" placeholder="Введите название города" style="display:none;margin-top:9px">
+        </div>
+
         <p class="delivery-warning">
           ВНИМАНИЕ!!! Доставка по городу работает только в г. ИЗБЕРБАШ
         </p>
       </div>
       <div class="field">
         <label for="delivery-address">Адрес доставки</label>
-        <input id="delivery-address" required placeholder="Город, улица, дом, квартира">
+        <input id="delivery-address" required placeholder="Улица, дом, квартира">
       </div>
       <div class="field">
         <label for="customer-comment">Комментарий</label>
@@ -1581,6 +1612,7 @@ async function openOrder(){
   if(!cart.length){alert("Корзина пустая");return}
   closeCart();
   document.getElementById("order-modal").style.display="block";
+  toggleOtherCityFields();
   calculateOrder();
   await refreshPaymentMethods();
 }
@@ -1705,6 +1737,19 @@ async function claimPayment(){
   }
 }
 
+function toggleOtherCityFields(){
+  const method=document.getElementById("delivery-method");
+  const fields=document.getElementById("other-city-fields");
+  const city=document.getElementById("delivery-city");
+  const custom=document.getElementById("delivery-city-custom");
+  const other=method.value==="other";
+  fields.style.display=other?"block":"none";
+  city.required=other;
+  custom.required=other&&city.value==="Другой город";
+  custom.style.display=other&&city.value==="Другой город"?"block":"none";
+}
+document.getElementById("delivery-city").addEventListener("change",toggleOtherCityFields);
+
 function calculateOrder(){
   const summary=document.getElementById("order-summary");
   const method=document.getElementById("delivery-method");
@@ -1721,7 +1766,10 @@ function calculateOrder(){
     <div class="spec-row"><span class="spec-name">Доставка</span><strong>${local?"300 ₽":"Уточняется"}</strong></div>
     <div class="spec-row"><span>Итого</span><strong class="order-total">${money(total)}${local?"":" + доставка"}</strong></div>`;
 }
-document.getElementById("delivery-method").addEventListener("change",calculateOrder);
+document.getElementById("delivery-method").addEventListener("change",()=>{
+  toggleOtherCityFields();
+  calculateOrder();
+});
 
 /* Отправка заказа */
 document.getElementById("order-form").addEventListener("submit",async function(e){
@@ -1730,12 +1778,16 @@ document.getElementById("order-form").addEventListener("submit",async function(e
 
   const name=document.getElementById("customer-name").value.trim();
   const phone=document.getElementById("customer-phone").value.trim();
-  const address=document.getElementById("delivery-address").value.trim();
+  const addressDetail=document.getElementById("delivery-address").value.trim();
   const comment=document.getElementById("customer-comment").value.trim();
   const method=document.getElementById("delivery-method").value;
+  const selectedCity=document.getElementById("delivery-city").value;
+  const customCity=document.getElementById("delivery-city-custom").value.trim();
+  const city=selectedCity==="Другой город"?customCity:selectedCity;
+  const address=method==="other"?(city+", "+addressDetail):addressDetail;
 
-  if(!name||!phone||!address){
-    alert("Заполните имя, телефон и адрес доставки.");
+  if(!name||!phone||!addressDetail||(method==="other"&&!city)){
+    alert(method==="other"?"Укажите город и адрес доставки, а также имя и телефон.":"Заполните имя, телефон и адрес доставки.");
     return;
   }
 
