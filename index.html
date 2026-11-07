@@ -1770,7 +1770,8 @@ function getCurrentDelivery(){
   const custom=document.getElementById("delivery-city-custom");
   const selectedCity=citySelect?.value||"";
   const city=selectedCity==="Другой город"?(custom?.value.trim()||"Другой город"):selectedCity;
-  if(getOrderItemCount()>=3)return 0;
+  const subtotal=cart.reduce((sum,p)=>sum+finalPrice(p)*p.qty,0);
+  if(getOrderItemCount()>=3&&subtotal>=8000)return 0;
   if(method==="local")return 300;
   if(method==="other"){
     if(!selectedCity)return 0;
@@ -1804,7 +1805,7 @@ function calculateOrder(){
 
   const subtotal=cart.reduce((sum,p)=>sum+finalPrice(p)*p.qty,0);
   const itemCount=getOrderItemCount();
-  const free=itemCount>=3;
+  const free=itemCount>=3&&subtotal>=8000;
   const citySelect=document.getElementById("delivery-city");
   const custom=document.getElementById("delivery-city-custom");
   const selectedCity=citySelect?.value||"";
@@ -1819,7 +1820,7 @@ function calculateOrder(){
     <div class="spec-row"><span class="spec-name">Товары (\${itemCount} шт.)</span><strong>\${money(subtotal)}</strong></div>
     <div class="spec-row"><span class="spec-name">Доставка\${method.value==="other"&&selectedCity?" · "+escapeHTML(city):""}</span><strong>\${deliveryLabel}</strong></div>
     <div class="spec-row"><span>Итого</span><strong class="order-total">\${money(total)}\${waiting?" + доставка":""}</strong></div>
-    <p class="delivery-note">\${free?"Поздравляем! При заказе от 3 товаров доставка бесплатная.":"Добавьте ещё "+Math.max(0,3-itemCount)+" товар(а), чтобы получить бесплатную доставку."}</p>\`;
+    <p class="delivery-note">\${free?"Поздравляем! При заказе от 3 товаров на сумму от 8 000 ₽ доставка бесплатная.":"Бесплатная доставка от 3 товаров на сумму от 8 000 ₽."}</p>\`;
 }
 document.getElementById("delivery-method").addEventListener("change",()=>{
   toggleOtherCityFields();
