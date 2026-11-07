@@ -2283,7 +2283,7 @@ async function deleteProduct(id){
 window.addEventListener("click",function(e){
   if(e.target.id==="cart-modal")closeCart();
   if(e.target.id==="order-modal")closeOrder();
-  if(e.target.id==="payment-modal")closePayment();
+  // Окно оплаты не закрывается нажатием на затемнённую область: защита от случайного закрытия.
   if(e.target.id==="lightbox")closeLightbox();
 
   const speakerWrap=document.querySelector(".category-wrap");
