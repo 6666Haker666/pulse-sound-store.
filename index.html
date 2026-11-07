@@ -775,7 +775,7 @@ footer span{color:var(--red);font-weight:bold}
         <label for="delivery-method">Способ доставки</label>
         <select id="delivery-method" required>
           <option value="local">Доставка по городу — 300 ₽</option>
-          <option value="other">Доставка в другой город — стоимость уточним</option>
+          <option value="other">Доставка в другой город — от 800 до 4 000 ₽</option>
         </select>
 
         <div class="field other-city-fields" id="other-city-fields">
@@ -784,7 +784,7 @@ footer span{color:var(--red);font-weight:bold}
             <option value="">Выберите город</option>
             <optgroup label="Дагестан">
               <option>Махачкала</option><option>Дербент</option><option>Каспийск</option>
-              <option>Избербаш</option><option>Хасавюрт</option><option>Буйнакск</option>
+              <option>Хасавюрт</option><option>Буйнакск</option>
               <option>Кизляр</option><option>Кизилюрт</option><option>Дагестанские Огни</option>
               <option>Южно-Сухокумск</option><option>Хунзах</option><option>Карабудахкент</option>
             </optgroup>
@@ -807,7 +807,7 @@ footer span{color:var(--red);font-weight:bold}
         </div>
 
         <p class="delivery-warning">
-          ВНИМАНИЕ!!! Доставка по городу работает только в г. ИЗБЕРБАШ
+          Стоимость доставки рассчитывается автоматически по выбранному городу. При заказе от 3 товаров доставка бесплатная.
         </p>
       </div>
       <div class="field">
@@ -827,7 +827,7 @@ footer span{color:var(--red);font-weight:bold}
       </div>
       <div class="order-summary" id="order-summary"><h3>Ваш заказ</h3></div>
       <button class="checkout" type="submit">Подтвердить заказ</button>
-      <p class="delivery-note">При доставке в другой город стоимость будет согласована отдельно.</p>
+      <p class="delivery-note">Доставка в другой город: от 800 до 4 000 ₽ в зависимости от расстояния. При заказе от 3 товаров доставка бесплатная.</p>
     </form>
   </div>
 </div>
@@ -1737,6 +1737,48 @@ async function claimPayment(){
   }
 }
 
+const CITY_DELIVERY_PRICES={
+  "Каспийск":900,"Дербент":1350,"Махачкала":1500,
+  "Дагестанские Огни":1200,"Карабудахкент":1300,"Буйнакск":1600,
+  "Кизилюрт":1700,"Хасавюрт":1800,"Кизляр":1900,"Хунзах":2200,
+  "Южно-Сухокумск":2300,"Грозный":1800,"Назрань":1900,
+  "Владикавказ":2000,"Астрахань":2000,"Нальчик":2100,
+  "Ставрополь":2200,"Черкесск":2300,"Элиста":2400,
+  "Волгоград":2600,"Краснодар":2600,"Ростов-на-Дону":2800,
+  "Москва":3000,"Сочи":3000,"Туапсе":3200,"Санкт-Петербург":3500,
+  "Воронеж":3200,"Саратов":3000,"Пенза":3200,"Белгород":3400,
+  "Курск":3400,"Липецк":3400,"Тамбов":3300,"Казань":3500,
+  "Самара":3500,"Уфа":3700,"Пермь":3900,"Челябинск":3900,
+  "Екатеринбург":4000,"Тюмень":4000,"Омск":4000,
+  "Новосибирск":4000,"Красноярск":4000,"Иркутск":4000
+};
+
+function getDeliveryPrice(city){
+  if(Object.prototype.hasOwnProperty.call(CITY_DELIVERY_PRICES,city)){
+    return CITY_DELIVERY_PRICES[city];
+  }
+  return 4000;
+}
+
+function getOrderItemCount(){
+  return cart.reduce((sum,p)=>sum+(Number(p.qty)||0),0);
+}
+
+function getCurrentDelivery(){
+  const method=document.getElementById("delivery-method")?.value;
+  const citySelect=document.getElementById("delivery-city");
+  const custom=document.getElementById("delivery-city-custom");
+  const selectedCity=citySelect?.value||"";
+  const city=selectedCity==="Другой город"?(custom?.value.trim()||"Другой город"):selectedCity;
+  if(getOrderItemCount()>=3)return 0;
+  if(method==="local")return 300;
+  if(method==="other"){
+    if(!selectedCity)return 0;
+    return getDeliveryPrice(city);
+  }
+  return 0;
+}
+
 function toggleOtherCityFields(){
   const method=document.getElementById("delivery-method");
   const fields=document.getElementById("other-city-fields");
@@ -1747,8 +1789,13 @@ function toggleOtherCityFields(){
   city.required=other;
   custom.required=other&&city.value==="Другой город";
   custom.style.display=other&&city.value==="Другой город"?"block":"none";
+  calculateOrder();
 }
-document.getElementById("delivery-city").addEventListener("change",toggleOtherCityFields);
+document.getElementById("delivery-city").addEventListener("change",()=>{
+  toggleOtherCityFields();
+  calculateOrder();
+});
+document.getElementById("delivery-city-custom").addEventListener("input",calculateOrder);
 
 function calculateOrder(){
   const summary=document.getElementById("order-summary");
@@ -1756,15 +1803,23 @@ function calculateOrder(){
   if(!summary||!method)return;
 
   const subtotal=cart.reduce((sum,p)=>sum+finalPrice(p)*p.qty,0);
-  const local=method.value==="local";
-  const delivery=local?300:0;
+  const itemCount=getOrderItemCount();
+  const free=itemCount>=3;
+  const citySelect=document.getElementById("delivery-city");
+  const custom=document.getElementById("delivery-city-custom");
+  const selectedCity=citySelect?.value||"";
+  const city=selectedCity==="Другой город"?(custom?.value.trim()||"Другой город"):selectedCity;
+  const delivery=getCurrentDelivery();
+  const waiting=method.value==="other"&&!selectedCity;
+  const deliveryLabel=free?"Бесплатно":waiting?"Выберите город":money(delivery);
   const total=subtotal+delivery;
 
-  summary.innerHTML=`
+  summary.innerHTML=\`
     <h3>Ваш заказ</h3>
-    <div class="spec-row"><span class="spec-name">Товары</span><strong>${money(subtotal)}</strong></div>
-    <div class="spec-row"><span class="spec-name">Доставка</span><strong>${local?"300 ₽":"Уточняется"}</strong></div>
-    <div class="spec-row"><span>Итого</span><strong class="order-total">${money(total)}${local?"":" + доставка"}</strong></div>`;
+    <div class="spec-row"><span class="spec-name">Товары (\${itemCount} шт.)</span><strong>\${money(subtotal)}</strong></div>
+    <div class="spec-row"><span class="spec-name">Доставка\${method.value==="other"&&selectedCity?" · "+escapeHTML(city):""}</span><strong>\${deliveryLabel}</strong></div>
+    <div class="spec-row"><span>Итого</span><strong class="order-total">\${money(total)}\${waiting?" + доставка":""}</strong></div>
+    <p class="delivery-note">\${free?"Поздравляем! При заказе от 3 товаров доставка бесплатная.":"Добавьте ещё "+Math.max(0,3-itemCount)+" товар(а), чтобы получить бесплатную доставку."}</p>\`;
 }
 document.getElementById("delivery-method").addEventListener("change",()=>{
   toggleOtherCityFields();
@@ -1803,7 +1858,7 @@ document.getElementById("order-form").addEventListener("submit",async function(e
   const order={
     name,phone,address,comment,
     deliveryMethod:method==="local"?"Доставка по городу":"Доставка в другой город",
-    delivery:method==="local"?300:0,
+    delivery:getCurrentDelivery(),
     paymentMethod:document.getElementById("payment-method").value,
     items:cart.map(p=>({product_id:p.id,quantity:p.qty}))
   };
