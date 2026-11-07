@@ -815,10 +815,10 @@ footer span{color:var(--red);font-weight:bold}
 <div class="payment-exit-confirm" id="payment-exit-confirm" role="dialog" aria-modal="true" aria-labelledby="payment-exit-title">
   <div class="payment-exit-box">
     <h3 id="payment-exit-title">Выйти из оплаты?</h3>
-    <p>Реквизиты оплаты будут скрыты. Вы сможете вернуться к ним позже, если заказ сохранён.</p>
+    <p>Заказ будет отменён, а товары вернутся в наличие. Если вы уже перевели деньги, не отменяйте заказ.</p>
     <div class="payment-exit-actions">
       <button class="payment-exit-cancel" onclick="cancelPaymentExit()">Отменить</button>
-      <button class="payment-exit-continue" onclick="confirmPaymentExit()">Продолжить</button>
+      <button class="payment-exit-continue" onclick="confirmPaymentExit()">Выйти и отменить заказ</button>
     </div>
   </div>
 </div>
@@ -1591,9 +1591,44 @@ function requestClosePayment(){
 function cancelPaymentExit(){
   document.getElementById("payment-exit-confirm").classList.remove("show");
 }
-function confirmPaymentExit(){
-  cancelPaymentExit();
-  closePayment();
+async function confirmPaymentExit(){
+  const button=document.querySelector(".payment-exit-continue");
+  if(!activePayment?.orderId||!activePayment?.token){
+    alert("Не удалось безопасно отменить заказ. Обратитесь к владельцу магазина.");
+    return;
+  }
+
+  const originalText=button.textContent;
+  button.disabled=true;
+  button.textContent="Отменяем заказ...";
+
+  try{
+    const response=await fetch(ORDER_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        action:"cancel_order",
+        order_id:activePayment.orderId,
+        claim_token:activePayment.token
+      })
+    });
+    const result=await response.json();
+    if(!response.ok||!result.success){
+      throw new Error(result.error||"Не удалось отменить заказ.");
+    }
+
+    activePayment=null;
+    cancelPaymentExit();
+    closePayment();
+    alert("Заказ отменён. Товары возвращены в наличие.");
+    await loadProducts();
+  }catch(error){
+    console.error(error);
+    alert(error.message);
+  }finally{
+    button.disabled=false;
+    button.textContent=originalText;
+  }
 }
 function closePayment(){
   document.getElementById("payment-exit-confirm").classList.remove("show");
