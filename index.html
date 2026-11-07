@@ -1815,12 +1815,12 @@ function calculateOrder(){
   const deliveryLabel=free?"Бесплатно":waiting?"Выберите город":money(delivery);
   const total=subtotal+delivery;
 
-  summary.innerHTML=\`
+  summary.innerHTML=`
     <h3>Ваш заказ</h3>
-    <div class="spec-row"><span class="spec-name">Товары (\${itemCount} шт.)</span><strong>\${money(subtotal)}</strong></div>
-    <div class="spec-row"><span class="spec-name">Доставка\${method.value==="other"&&selectedCity?" · "+escapeHTML(city):""}</span><strong>\${deliveryLabel}</strong></div>
-    <div class="spec-row"><span>Итого</span><strong class="order-total">\${money(total)}\${waiting?" + доставка":""}</strong></div>
-    <p class="delivery-note">\${free?"Поздравляем! При заказе от 3 товаров на сумму от 8 000 ₽ доставка бесплатная.":"Бесплатная доставка от 3 товаров на сумму от 8 000 ₽."}</p>\`;
+    <div class="spec-row"><span class="spec-name">Товары (${itemCount} шт.)</span><strong>${money(subtotal)}</strong></div>
+    <div class="spec-row"><span class="spec-name">Доставка${method.value==="other"&&selectedCity?" · "+escapeHTML(city):""}</span><strong>${deliveryLabel}</strong></div>
+    <div class="spec-row"><span>Итого</span><strong class="order-total">${money(total)}${waiting?" + доставка":""}</strong></div>
+    <p class="delivery-note">${free?"Поздравляем! При заказе от 3 товаров на сумму от 8 000 ₽ доставка бесплатная.":"Бесплатная доставка от 3 товаров на сумму от 8 000 ₽."}</p>`;
 }
 document.getElementById("delivery-method").addEventListener("change",()=>{
   toggleOtherCityFields();
